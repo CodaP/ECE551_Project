@@ -28,6 +28,18 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
   ///////////////////////////////////////////////////////
   // Instantiate the blocks of your digital core next //
   /////////////////////////////////////////////////////
-  
+  cmd_module c(clk,
+               rst_n,
+               cmd,
+               cmd_rdy,
+               clr_cmd_rdy,
+               resp_data,
+               send_resp,
+               resp_sent,
+               ss,
+               wrt_SPI,
+               SPI_data,
+               EEP_data,
+               SPI_done);
+
 endmodule
-  
