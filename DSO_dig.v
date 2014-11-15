@@ -14,7 +14,8 @@ module DSO_dig(clk,rst_n,adc_clk,ch1_data,ch2_data,ch3_data,trig1,trig2,MOSI,MIS
   output EEP_ss_n;								// Calibration EEPROM slave select
   output TX;									// UART TX to HOST
   input RX;										// UART RX from HOST
-  output LED_n;									// control to active low LED
+  // TODO
+  //output LED_n;									// control to active low LED
   
   ////////////////////////////////////////////////////
   // Define any wires needed for interconnect here //
@@ -34,6 +35,13 @@ module DSO_dig(clk,rst_n,adc_clk,ch1_data,ch2_data,ch3_data,trig1,trig2,MOSI,MIS
   ///////////////////////////////////
   // Instantiate UART_comm module //
   /////////////////////////////////
+  reg clr_cmd_rdy;
+  wire cmd_rdy;
+  wire [23:0] cmd;
+  reg trmt;
+  reg [7:0] tx_data;
+  wire tx_done;
+  UART_comm comm(clk, rst_n, RX, TX, clr_cmd_rdy, cmd_rdy, cmd, trmt, tx_data, tx_done);
 				    
   ///////////////////////////
   // Instantiate dig_core //
