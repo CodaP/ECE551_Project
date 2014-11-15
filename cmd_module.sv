@@ -1,4 +1,4 @@
-typedef enum logic[2:0] { SS_NONE, SS_EEPROM, SS_CH1, SS_CH2, SS_CH3, SS_TRIGGER } SlaveSelect;
+`include "types.h"
 
 module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, resp_sent, ss, wrt_SPI, SPI_data, EEP_data, SPI_done);
 	

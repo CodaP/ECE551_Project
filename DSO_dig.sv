@@ -1,4 +1,5 @@
 `timescale 1ns/10ps
+`include "types.h"
 module DSO_dig(clk,rst_n,adc_clk,ch1_data,ch2_data,ch3_data,trig1,trig2,MOSI,MISO,
                SCLK,trig_ss_n,ch1_ss_n,ch2_ss_n,ch3_ss_n,EEP_ss_n,TX,RX);
 				
@@ -20,11 +21,25 @@ module DSO_dig(clk,rst_n,adc_clk,ch1_data,ch2_data,ch3_data,trig1,trig2,MOSI,MIS
   ////////////////////////////////////////////////////
   // Define any wires needed for interconnect here //
   //////////////////////////////////////////////////
+  SlaveSelect ss;
+  SlaveSelect nxt_ss;
+  logic wrt_SPI;
+
+  always_ff @(posedge clk, negedge rst_n)
+    if(!rst_n)
+        ss <= SS_NONE;
+    else
+        if(wrt_SPI)
+            ss <= nxt_ss;
+        else
+            ss <= ss;
+
 
 
   /////////////////////////////
   // Instantiate SPI master //
   ///////////////////////////
+  SPIMaster spi(clk, rst_n, cmd, wrt_SPI, MISO, SCLK, MOSI, SS_n, SPI_data, SPI_done);
   
   ///////////////////////////////////////////////////////////////
   // You have a SPI master peripheral with a single SS output //
@@ -35,17 +50,19 @@ module DSO_dig(clk,rst_n,adc_clk,ch1_data,ch2_data,ch3_data,trig1,trig2,MOSI,MIS
   ///////////////////////////////////
   // Instantiate UART_comm module //
   /////////////////////////////////
-  reg clr_cmd_rdy;
-  wire cmd_rdy;
-  wire [23:0] cmd;
-  reg trmt;
-  reg [7:0] tx_data;
-  wire tx_done;
+  logic clr_cmd_rdy;
+  logic cmd_rdy;
+  logic trmt;
+  logic [7:0] tx_data;
+  logic tx_done;
   UART_comm comm(clk, rst_n, RX, TX, clr_cmd_rdy, cmd_rdy, cmd, trmt, tx_data, tx_done);
 				    
   ///////////////////////////
   // Instantiate dig_core //
   /////////////////////////
+  dig_core core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,nxt_ss,EEP_data,
+                  rclk,en,we,addr,ch1_rdata,ch2_rdata,ch3_rdata,cmd,cmd_rdy,clr_cmd_rdy,
+                  resp_data,send_resp,resp_sent);
 
   //////////////////////////////////////////////////////////////
   // Instantiate the 3 512 RAM blocks that store A2D samples //
