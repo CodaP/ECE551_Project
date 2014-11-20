@@ -1,7 +1,7 @@
 `timescale 1ns/10ps
 `include "types.h"
 module DSO_dig(clk,rst_n,adc_clk,ch1_data,ch2_data,ch3_data,trig1,trig2,MOSI,MISO,
-               SCLK,trig_ss_n,ch1_ss_n,ch2_ss_n,ch3_ss_n,EEP_ss_n,TX,RX);
+               SCLK,trig_ss_n,ch1_ss_n,ch2_ss_n,ch3_ss_n,EEP_ss_n,TX,RX, LED_n);
 				
   input clk,rst_n;								// clock and active low reset
   output adc_clk;								// 20MHz clocks to ADC
@@ -15,8 +15,7 @@ module DSO_dig(clk,rst_n,adc_clk,ch1_data,ch2_data,ch3_data,trig1,trig2,MOSI,MIS
   output logic EEP_ss_n;								// Calibration EEPROM slave select
   output TX;									// UART TX to HOST
   input RX;										// UART RX from HOST
-  // TODO
-  //output LED_n;									// control to active low LED
+  output LED_n;									// control to active low LED
   logic clr_cmd_rdy;
   logic cmd_rdy;
   logic trmt;
@@ -29,11 +28,13 @@ module DSO_dig(clk,rst_n,adc_clk,ch1_data,ch2_data,ch3_data,trig1,trig2,MOSI,MIS
   //////////////////////////////////////////////////
   SlaveSelect ss;
   SlaveSelect nxt_ss;
+
   logic wrt_SPI;
-  logic SPI_data;
+  logic [15:0] SPI_data;
   logic SPI_done;
 
-  logic EEP_data;
+  logic [15:0] EEP_data;
+  assign trunc_EEP_data = {EEP_data[7:0]};
   logic rclk;
   logic en,we;
   logic [8:0] addr;
@@ -64,7 +65,16 @@ module DSO_dig(clk,rst_n,adc_clk,ch1_data,ch2_data,ch3_data,trig1,trig2,MOSI,MIS
   /////////////////////////////
   // Instantiate SPI master //
   ///////////////////////////
-  SPIMaster spi(clk, rst_n, cmd, wrt_SPI, MISO, SCLK, MOSI, nxt_SS_n, SPI_data, SPI_done);
+  SPIMaster spi(.clk(clk),
+                .rst_n(rst_n),
+                .cmd(SPI_data),
+                .wrt(wrt_SPI),
+                .MISO(MISO),
+                .SCLK(SCLK),
+                .MOSI(MOSI),
+                .SS_n(nxt_SS_n),
+                .data(EEP_data),
+                .done(SPI_done));
   
   ///////////////////////////////////////////////////////////////
   // You have a SPI master peripheral with a single SS output //
@@ -95,7 +105,7 @@ module DSO_dig(clk,rst_n,adc_clk,ch1_data,ch2_data,ch3_data,trig1,trig2,MOSI,MIS
   ///////////////////////////
   // Instantiate dig_core //
   /////////////////////////
-  dig_core core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,nxt_ss,EEP_data,
+  dig_core core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,nxt_ss,trunc_EEP_data,
                   rclk,en,we,addr,ch1_rdata,ch2_rdata,ch3_rdata,cmd,cmd_rdy,clr_cmd_rdy,
                   tx_data,trmt,tx_done);
 

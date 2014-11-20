@@ -7,6 +7,8 @@ reg [23:0] cmd_snd;						// command Host is sending to DUT
 reg send_cmd;
 reg clr_resp_rdy;
 
+reg fail;
+
 wire adc_clk,MOSI,SCLK,trig_ss_n,ch1_ss_n,ch2_ss_n,ch3_ss_n,EEP_ss_n;
 wire TX,RX;
 
@@ -48,7 +50,7 @@ AFE_A2D iAFE(.clk(clk),.rst_n(rst_n),.adc_clk(adc_clk),.ch1_ss_n(ch1_ss_n),.ch2_
 /////////////////////////////////////////////
 // Instantiate UART Master (acts as host) //
 ///////////////////////////////////////////
-UART_comm_mstr iMSTR(.clk(clk), .rst_n(rst_n), .RX(TX), .TX(RX), .cmd(cmd_snd), .send_cmd(send_cmd),
+UART_comm iMSTR(.clk(clk), .rst_n(rst_n), .RX(TX), .TX(RX), .cmd(cmd_snd), .send_cmd(send_cmd),
                      .cmd_sent(cmd_sent), .resp_rdy(resp_rdy), .resp(resp_rcv), .clr_resp_rdy(clr_resp_rdy));
 
 /////////////////////////////////////
@@ -59,10 +61,47 @@ SPI_EEP iEEP(.clk(clk),.rst_n(rst_n),.SS_n(EEP_ss_n),.SCLK(SCLK),.MOSI(MOSI),.MI
 initial begin
   clk = 0;
   rst_n = 0;			// assert reset
+  fail = 0;
+  send_cmd = 0;
+  clr_resp_rdy = 0;
   ///////////////////////////////
   // Your testing goes here!! //
   /////////////////////////////
+  repeat(10) @(negedge clk);
+  rst_n = 1;
+  
+  send_uart({CFG_GAIN, 8'b00011100, 8'hxx });
+
+  if(resp_rcv != 8'hA5)
+      fail = 1;
+  @(negedge clk)  clr_resp_rdy = 1;
+  @(negedge clk)  clr_resp_rdy = 0;
+
+  send_uart({EEP_WRT, 8'b00101010, 8'hAB});
+
+  if(resp_rcv != 8'hA5)
+      fail = 1;
+  @(negedge clk)  clr_resp_rdy = 1;
+  @(negedge clk)  clr_resp_rdy = 0;
+
+  send_uart({EEP_RD, 8'b00101010, 8'hxx});
+  if(resp_rcv != 8'hAB)
+      fail = 1;
+  @(negedge clk)  clr_resp_rdy = 1;
+  @(negedge clk)  clr_resp_rdy = 0;
+
 end
+
+task send_uart(input reg [23:0] input_cmd);
+
+  @(negedge clk);
+  send_cmd = 1;
+  @(negedge clk);
+  send_cmd = 0;
+  @(posedge cmd_sent);
+  @(posedge resp_rdy);
+
+endtask
 
 always
   #1 clk = ~clk;

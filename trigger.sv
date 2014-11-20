@@ -49,3 +49,22 @@ module DetectTrigger(clk,rst_n,trigger1,trigger2,trigger_source,trig_set,pos_edg
 	assign trig_set = pos_edge ? posEdge:negEdge;
 
 endmodule
+
+module TwoTrigger(clk, rst_n, trigger_source, trig_en, pos_edge, armed, trig1, trig2, set_capture_done, trigger);
+    input clk;
+    input rst_n;
+    input trigger_source;
+    input trig_en;
+    input pos_edge;
+    input armed;
+    input trig1;
+    input trig2;
+    input set_capture_done;
+    output logic trigger;
+
+    logic trig_set;
+
+    DetectTrigger dt(clk, rst_n, trig1, trig2, trigger_source, trig_set, pos_edge);
+    Trigger trigger1(clk, rst_n, trig_set, armed, trig_en, set_capture_done, trigger);
+
+endmodule
