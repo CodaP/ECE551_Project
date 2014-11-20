@@ -26,14 +26,15 @@ module DSO_dig(clk,rst_n,adc_clk,ch1_data,ch2_data,ch3_data,trig1,trig2,MOSI,MIS
   ////////////////////////////////////////////////////
   // Define any wires needed for interconnect here //
   //////////////////////////////////////////////////
-  SlaveSelect ss;
-  SlaveSelect nxt_ss;
+  logic [2:0] ss;
+  logic [2:0] nxt_ss;
 
   logic wrt_SPI;
   logic [15:0] SPI_data;
   logic SPI_done;
 
   logic [15:0] EEP_data;
+  logic [7:0] trunc_EEP_data;
   assign trunc_EEP_data = {EEP_data[7:0]};
   logic rclk;
   logic en,we;

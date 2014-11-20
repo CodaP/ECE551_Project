@@ -3,7 +3,7 @@ module DSO_dig_tb();
 	
 reg clk,rst_n;							// clock and reset are generated in TB
 
-reg [23:0] cmd_snd;						// command Host is sending to DUT
+reg [7:0] cmd_snd;						// command Host is sending to DUT
 reg send_cmd;
 reg clr_resp_rdy;
 
@@ -50,8 +50,8 @@ AFE_A2D iAFE(.clk(clk),.rst_n(rst_n),.adc_clk(adc_clk),.ch1_ss_n(ch1_ss_n),.ch2_
 /////////////////////////////////////////////
 // Instantiate UART Master (acts as host) //
 ///////////////////////////////////////////
-UART_comm iMSTR(.clk(clk), .rst_n(rst_n), .RX(TX), .TX(RX), .cmd(cmd_snd), .send_cmd(send_cmd),
-                     .cmd_sent(cmd_sent), .resp_rdy(resp_rdy), .resp(resp_rcv), .clr_resp_rdy(clr_resp_rdy));
+UART iMSTR(.clk(clk), .rst_n(rst_n), .RX(TX), .TX(RX), .rx_data(resp_rcv), .trmt(send_cmd),
+                     .tx_done(cmd_sent), .rdy(resp_rdy), .tx_data(cmd_snd), .clr_rdy(clr_resp_rdy));
 
 /////////////////////////////////////
 // Instantiate Calibration EEPROM //
@@ -89,17 +89,32 @@ initial begin
       fail = 1;
   @(negedge clk)  clr_resp_rdy = 1;
   @(negedge clk)  clr_resp_rdy = 0;
+  $stop;
 
 end
 
 task send_uart(input reg [23:0] input_cmd);
 
+  cmd_snd = input_cmd[23:16];
   @(negedge clk);
   send_cmd = 1;
   @(negedge clk);
   send_cmd = 0;
   @(posedge cmd_sent);
-  @(posedge resp_rdy);
+  cmd_snd = input_cmd[15:8];
+  @(negedge clk);
+  send_cmd = 1;
+  @(negedge clk);
+  send_cmd = 0;
+  @(posedge cmd_sent);
+  cmd_snd = input_cmd[7:0];
+  @(negedge clk);
+  send_cmd = 1;
+  @(negedge clk);
+  send_cmd = 0;
+  @(posedge cmd_sent);
+  if(!resp_rdy)
+      @(posedge resp_rdy);
 
 endtask
 

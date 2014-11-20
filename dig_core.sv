@@ -7,7 +7,7 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
   input trig1,trig2;                            // trigger inputs from AFE
   output logic [15:0] SPI_data;                 // typically a config command to digital pots or EEPROM
   output logic wrt_SPI;                         // control signal asserted for 1 clock to initiate SPI transaction
-  output SlaveSelect ss;                        // determines which Slave gets selected 000=>trig, 001-011=>chX_ss, 100=>EEP
+  output logic [2:0] ss;                        // determines which Slave gets selected 000=>trig, 001-011=>chX_ss, 100=>EEP
   input SPI_done;                               // asserted by SPI peripheral when finished transaction
   input [7:0] EEP_data;                         // Formed from MISO from EEPROM.  only lower 8-bits needed from SPI periph
   output logic en,we;                           // RAM block control signals (common to all 3 RAM blocks)
@@ -31,8 +31,8 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
  
   // cmd_module <-> Capture interconnects
   logic start_dump;
-  logic dump_channel;
-  logic dump_data;
+  logic [1:0] dump_channel;
+  logic [7:0] dump_data;
   logic send_dump;
   logic dump_finished;
   logic set_capture_done;
@@ -73,13 +73,13 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
                // Extra connections
                // Capture options for help dumping
                start_dump, // output to Capture
-               dump_channel, // output to Capture
+               dump_channel, // output [1:0] to Capture
                dump_data, // input [7:0] from Capture
                send_dump, // input from Capture
                dump_finished, // input from Capture
                set_capture_done, // input from Capture for trigger
                // Trigger options for help triggering
-               trig_cfg, // output [5:0] to trigger
+               trig_cfg // output [5:0] to trigger
                );
 
 endmodule
