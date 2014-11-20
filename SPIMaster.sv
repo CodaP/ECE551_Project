@@ -79,8 +79,16 @@ module SPIMaster(clk, rst_n, cmd, wrt, MISO, SCLK, MOSI, SS_n, data, done);
 			end
 		DONE: // Signal done for one clock, then IDLE
 			begin
-				next_state = IDLE;
-				done = 1;
+                done = 1;
+                if(wrt) begin
+                    next_state = GEN;
+                    next_cycle = 0;
+                    next_clock = 0;
+                    next_data = cmd;
+                end
+                else begin
+                    next_state = IDLE;
+                end
 			end
 		default:
 			next_state = IDLE;

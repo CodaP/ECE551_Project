@@ -106,20 +106,19 @@ module UART_comm(clk, rst_n, RX, TX, clr_cmd_rdy, cmd_rdy, cmd, trmt, tx_data, t
             READ_LOW_BYTE:
                 if(rdy) begin
                     nxt_state = COMMAND_READY;
-                    clr_rdy = 1;
                 end
                 else
                     nxt_state = READ_LOW_BYTE;
 
-            COMMAND_READY:
+            COMMAND_READY: begin
+                cmd_rdy = 1;
                 if(clr_cmd_rdy) begin
                     nxt_state = READ_HIGH_BYTE;
-                    cmd_rdy = 0;
+                    clr_rdy = 1;
                 end
-                else begin
+                else
                     nxt_state = COMMAND_READY;
-                    cmd_rdy = 1;
-                end
+            end
 
             default nxt_state = READ_HIGH_BYTE;
 

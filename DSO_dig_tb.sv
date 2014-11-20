@@ -77,7 +77,7 @@ initial begin
   @(negedge clk)  clr_resp_rdy = 1;
   @(negedge clk)  clr_resp_rdy = 0;
 
-  send_uart({EEP_WRT, 8'b00101010, 8'hAB});
+  send_uart({EEP_WRT, 8'b00101010, 8'h99});
 
   if(resp_rcv != 8'hA5)
       fail = 1;
@@ -85,10 +85,17 @@ initial begin
   @(negedge clk)  clr_resp_rdy = 0;
 
   send_uart({EEP_RD, 8'b00101010, 8'hxx});
-  if(resp_rcv != 8'hAB)
+  if(resp_rcv != 8'h99)
       fail = 1;
   @(negedge clk)  clr_resp_rdy = 1;
   @(negedge clk)  clr_resp_rdy = 0;
+
+  send_uart({TRIG_LVL, 8'hxx, 8'h80});
+  if(resp_rcv != 8'hA5)
+      fail = 1;
+  @(negedge clk)  clr_resp_rdy = 1;
+  @(negedge clk)  clr_resp_rdy = 0;
+
   $stop;
 
 end

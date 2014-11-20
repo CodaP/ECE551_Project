@@ -15,7 +15,6 @@ module UART_rx(clk, rst_n, clr_rdy, RX, rx_data, rdy);
 	logic[2:0] data_count, next_data_count; // number of bits received
 	logic[5:0] baud_count, next_baud_count; // number of clocks for which this bit has been received
 	logic RX_stable; Stabilize #(.RESET(1)) RX_stabilizer(clk, rst_n, RX, RX_stable);
-	logic set_rdy  ; Bit       #(.RESET(0)) rdy_bit      (clk, rst_n, set_rdy, clr_rdy, rdy);
 
 	typedef enum reg[1:0] { IDLE, START, DATA, STOP } UART_rx_State;
 	UART_rx_State state, next_state;
@@ -36,7 +35,7 @@ module UART_rx(clk, rst_n, clr_rdy, RX, rx_data, rdy);
 	always_comb begin
 		next_state = IDLE;
 		next_rx_data = rx_data;
-		set_rdy = 0;
+		rdy = 0;
 		next_data_count = data_count;
 		next_baud_count = 6'hxx;
 		baud_done = (baud_count == BAUD_DONE);
@@ -77,8 +76,8 @@ module UART_rx(clk, rst_n, clr_rdy, RX, rx_data, rdy);
 		end
 		STOP: begin // Make sure RX is 1 (hopefully stop bit) before going back to IDLE
 			next_state = STOP;
-			if (RX_stable) begin
-				set_rdy = 1;
+            rdy = 1;
+			if (clr_rdy) begin
 				next_state = IDLE;
 			end
 		end

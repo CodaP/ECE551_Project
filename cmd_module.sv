@@ -36,7 +36,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, r
     // Trigger options for help triggering
     output logic [5:0] trig_cfg; // output [5:0] to trigger
 
-    typedef enum logic [1:0] { DISPATCH_CMD, WRT_EEP, RD_EEP } State;
+    typedef enum logic [2:0] { DISPATCH_CMD, WRT_EEP, RD_EEP_0, RD_EEP_1, RD_EEP_2 } State;
 
     State state;
     State nxt_state;
@@ -107,7 +107,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, r
                             SPI_data = {2'b01, cmd[13:0]};
                         end
                         READ_EEPROM:begin
-                            nxt_state = RD_EEP;
+                            nxt_state = RD_EEP_0;
                             wrt_SPI = 1;
                             ss = SS_EEPROM;
                             // Read from EEPROM cmd[13:8] (addr) cmd[7:0] (data)
@@ -130,15 +130,41 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, r
             end
 
             // Read from EEPROM
-            RD_EEP:begin
+            RD_EEP_0:begin
+                if(SPI_done) begin
+                    nxt_state = RD_EEP_1;
+                    wrt_SPI = 1;
+                    ss = SS_NONE;
+                    SPI_data = {2'b00, 14'h0000};
+                end
+                else
+                    nxt_state = RD_EEP_0;
+
+            end
+
+            RD_EEP_1:begin
+                if(SPI_done) begin
+                    nxt_state = RD_EEP_2;
+                    wrt_SPI = 1;
+                    ss = SS_EEPROM;
+                    SPI_data = {2'b00, 14'h0000};
+                end
+                else
+                    nxt_state = RD_EEP_1;
+
+            end
+
+            // Read from EEPROM
+            RD_EEP_2:begin
                 if(SPI_done) begin
                     nxt_state = DISPATCH_CMD;
                     resp_data = EEP_data;
                     send_resp = 1;
                 end
                 else
-                    nxt_state = RD_EEP;
+                    nxt_state = RD_EEP_2;
             end
+
             default: nxt_state = DISPATCH_CMD;
 
         endcase
