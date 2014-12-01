@@ -1,0 +1,30 @@
+dump sequence
+==============
+
+- Read contents of RAM
+- Apply offset/gains
+    - Specific per channel and analog gain
+    - In EEPROM
+
+- capture gain locally in flops on write
+
+Hoff has states in cmd for DUMP and RD_OFFSET
+
+Reading EEPROM for dump
+=======================
+
+Need three transactions
+    1. Send: RD_OFF  Read: Junk
+    2. Send: RD_GAIN Read: offset
+    3. Send: JUNK    Read: gain
+
+Then read SRAM, send to UART...
+
+Notes
+-----
+
+* trig_en = trig_cfg[3] || trig_cfg[2]
+* Only pay attention to triggered in normal mode
+* Decimator looks like decoder
+* Grading area 2355
+
