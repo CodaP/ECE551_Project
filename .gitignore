@@ -1,2 +1,7 @@
 work/
+work.old/
 *.mpf
+*.wlf
+.*.swp
+*.svf
+*.mti
