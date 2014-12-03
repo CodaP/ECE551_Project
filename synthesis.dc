@@ -1,0 +1,16 @@
+read_file {DSO_dig.sv UART_comm.sv UART.sv UART_rx.sv UART_tx.sv SPIMaster.sv dig_core.sv cmd_module.sv capture.sv RAM512_shell.sv }
+set current_design DSO_dig
+create_clock -name "clk" -period 2.5 -waveform { 0 1 } {clk}
+set_dont_touch_network [ find port clk ]
+set prim_inputs [remove_from_collection [all_inputs] [find port clk]]
+set_input_delay -clock clk 0.5 $prim_inputs
+set_output_delay -clock clk 0.5 [all_outputs]
+set_driving_cell -lib_cell ND2D2BWP -from_pin A1 -library tcbn40lpbwptc $prim_inputs
+set_load 0.1 [all_outputs]
+set_wire_load_model -name TSMC32K_Lowk_Conservative -library tcbn40lpbwptc
+set_max_transition 0.15 [current_design]
+set_clock_uncertainty 0.15 clk
+compile -map_effort medium
+report_timing -delay min > timing.rpt
+report_timing -delay max >> timing.rpt
+report_area > area.rpt
