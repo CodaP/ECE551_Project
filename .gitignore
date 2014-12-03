@@ -5,3 +5,5 @@ work.old/
 .*.swp
 *.svf
 *.mti
+transcript
+filenames.log
