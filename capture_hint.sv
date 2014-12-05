@@ -1,5 +1,5 @@
 typedef enum logic [1:0] {WAIT_TRIG, SAMP1, SAMP2, DONE} State;
-module capture_hint(clk, rst_n, rclk, clr_trig_cnt, clr_dec_cnt, en_dec_cnt, inc_addr, we, en ,en_trig_cnt, trig_cnt, dec, trig_pos, trigger, autoroll, armed);
+module capture_hint(clk, rst_n, rclk, clr_trig_cnt, clr_dec_cnt, en_dec_cnt, inc_addr, we, en ,en_trig_cnt, trig_cnt, dec_cnt, dec_pwr, trig_pos, trigger, autoroll, armed);
 
     State state;
     State nxt_state;
@@ -12,15 +12,13 @@ module capture_hint(clk, rst_n, rclk, clr_trig_cnt, clr_dec_cnt, en_dec_cnt, inc
     input logic trigger;
     input logic autoroll;
     input logic armed;
+    input logic [8:0] trig_cnt;
 
-    input logic [3:0] dec;
-    logic [15:0] dec_pwr;
-
-    assign dec_pwr = 1 << dec_pwr;
+    input logic [15:0] dec_pwr;
+    input logic [15:0] dec_cnt;
 
     logic keep;
     logic keep_ff;
-    logic dec_cnt;
     logic trig_type;
     output logic clr_trig_cnt;
     output logic clr_dec_cnt;
@@ -29,7 +27,6 @@ module capture_hint(clk, rst_n, rclk, clr_trig_cnt, clr_dec_cnt, en_dec_cnt, inc
     output logic we;
     output logic en;
     output logic en_trig_cnt;
-    output logic trig_cnt;
 
     always_ff @(posedge clk, negedge rst_n)
         if(!rst_n)
@@ -91,3 +88,58 @@ module capture_hint(clk, rst_n, rclk, clr_trig_cnt, clr_dec_cnt, en_dec_cnt, inc
 
 endmodule
 
+module capture_hint_tb;
+    logic clk;
+    logic rst_n;
+    logic rclk;
+    logic clr_trig_cnt; //Output
+    logic clr_dec_cnt; //Output
+    logic en_dec_cnt; //Output
+    logic inc_addr; //Output
+    logic we; // Output
+    logic en; // Output 
+    logic en_trig_cnt; // Output
+    logic trig_cnt;
+    logic [15:0] dec_cnt;
+    logic [8:0] trig_pos;
+    logic trigger;
+    logic autoroll;
+    logic armed;
+
+
+    always_ff @(posedge clk, negedge rst_n)
+        if(!rst_n)
+            trig_pos <= 0;
+        else
+            if(clr_trig_cnt)
+                trig_pos <= 0;
+            else if(en_trig_cnt)
+                trig_pos <= trig_pos + 1;
+            else
+                trig_pos <= trig_pos;
+
+    always_ff @(posedge clk, negedge rst_n)
+        if(!rst_n)
+            dec_cnt <= 0;
+        else
+            if(clr_dec_cnt)
+                dec_cnt <= 0;
+            else if(en_dec_cnt)
+                dec_cnt <= dec_cnt + 1;
+            else
+                dec_cnt <= dec_cnt;
+
+    initial begin
+        autoroll = 0;
+        armed = 1;
+        clk = 0;
+        rclk = 0;
+        rst_n = 0;
+        trigger = 0;
+
+    end
+
+    always #1 clk <= ~clk;
+    always #2 rclk <= ~rclk;
+    
+endmodule
