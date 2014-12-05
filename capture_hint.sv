@@ -1,5 +1,7 @@
 typedef enum logic [1:0] {WAIT_TRIG, SAMP1, SAMP2, DONE} State;
-module capture_hint(clk, rst_n, rclk, clr_trig_cnt, clr_dec_cnt, en_dec_cnt, inc_addr, we, en, en_trig_cnt, trig_cnt, dec_cnt, dec_pwr, trig_pos, trigger, autoroll, armed, trig_type);
+typedef logic[8:0] Address;
+
+module capture_hint(clk, rst_n, rclk, clr_trig_cnt, clr_dec_cnt, en_dec_cnt, addr, we, en, en_trig_cnt, trig_cnt, dec_cnt, dec_pwr, trig_pos, trigger, autoroll, armed, trig_type);
 
     State state;
     State nxt_state;
@@ -8,22 +10,24 @@ module capture_hint(clk, rst_n, rclk, clr_trig_cnt, clr_dec_cnt, en_dec_cnt, inc
     input logic rst_n;
 
     input logic rclk;
-    input logic [8:0] trig_pos;
+    input Address trig_pos;
     input logic trigger;
     input logic autoroll;
     input logic armed;
-    input logic [8:0] trig_cnt;
+    input Address trig_cnt;
 
-    input logic [15:0] dec_pwr;
+    input logic [ 3:0] dec_pwr;
     input logic [15:0] dec_cnt;
 
     logic keep;
     logic keep_ff;
+    Address next_addr;
+
     input logic trig_type;
     output logic clr_trig_cnt;
     output logic clr_dec_cnt;
     output logic en_dec_cnt;
-    output logic inc_addr;
+    output Address addr;
     output logic we;
     output logic en;
     output logic en_trig_cnt;
@@ -39,20 +43,26 @@ module capture_hint(clk, rst_n, rclk, clr_trig_cnt, clr_dec_cnt, en_dec_cnt, inc
             keep_ff <= 1'b0;
         else
             keep_ff <= keep;
+ 
+    assign keep = dec_cnt[dec_pwr];
 
-    assign keep = (dec_cnt == dec_pwr)? 1'b1 : 1'b0;
+    always_ff @(posedge clk, negedge rst_n)
+        if (!rst_n)
+            addr <= 0;
+        else
+            addr <= next_addr;
 
     always_comb begin
         clr_trig_cnt = 0;
         clr_dec_cnt = 0;
         en_dec_cnt = 0;
-        inc_addr = 0;
+        next_addr = addr;
         we = 0;
         en = 0;
         en_trig_cnt = 0;
         case(state)
             WAIT_TRIG:
-                if(~rclk & trig_type) begin
+                if(~rclk & |trig_type) begin
                     nxt_state = SAMP1;
                     clr_trig_cnt= 1;
                     clr_dec_cnt= 1;
@@ -62,7 +72,7 @@ module capture_hint(clk, rst_n, rclk, clr_trig_cnt, clr_dec_cnt, en_dec_cnt, inc
             SAMP1: begin
                 nxt_state = SAMP2;
                 en_dec_cnt = 1;
-                inc_addr = keep_ff;
+                next_addr = keep_ff ? addr + 1 : addr;
                 we = keep_ff;
                 en = keep_ff;
             end
@@ -103,17 +113,17 @@ module capture_hint_tb;
     logic clr_trig_cnt; //Output
     logic clr_dec_cnt; //Output
     logic en_dec_cnt; //Output
-    logic inc_addr; //Output
+    Address addr; //Output
     logic we; // Output
     logic en; // Output 
     logic en_trig_cnt; // Output
-    logic [8:0] trig_cnt;
+    Address trig_cnt;
     logic [15:0] dec_cnt;
-    logic [8:0] trig_pos;
+    Address trig_pos;
     logic trigger;
     logic autoroll;
     logic armed;
-    logic [15:0] dec_pwr;
+    logic [3:0] dec_pwr;
 
 
     capture_hint c1(
@@ -123,7 +133,7 @@ module capture_hint_tb;
     .clr_trig_cnt(clr_trig_cnt),
     .clr_dec_cnt(clr_dec_cnt),
     .en_dec_cnt(en_dec_cnt),
-    .inc_addr(inc_addr),
+    .addr(addr),
     .we(we),
     .en(en),
     .en_trig_cnt(en_trig_cnt),
@@ -166,7 +176,7 @@ module capture_hint_tb;
         rclk = 0;
         rst_n = 0;
         trigger = 0;
-        dec_pwr = 1;
+        dec_pwr = 0;
         trig_pos = 100;
 
         @(negedge clk) rst_n = 1;
