@@ -1,5 +1,5 @@
 typedef enum logic [1:0] {WAIT_TRIG, SAMP1, SAMP2, DONE} State;
-module capture_hint(clk, rst_n, rclk, clr_trig_cnt, clr_dec_cnt, en_dec_cnt, inc_addr, we, en ,en_trig_cnt, trig_cnt, dec_cnt, dec_pwr, trig_pos, trigger, autoroll, armed);
+module capture_hint(clk, rst_n, rclk, clr_trig_cnt, clr_dec_cnt, en_dec_cnt, inc_addr, we, en, en_trig_cnt, trig_cnt, dec_cnt, dec_pwr, trig_pos, trigger, autoroll, armed, trig_type);
 
     State state;
     State nxt_state;
@@ -19,7 +19,7 @@ module capture_hint(clk, rst_n, rclk, clr_trig_cnt, clr_dec_cnt, en_dec_cnt, inc
 
     logic keep;
     logic keep_ff;
-    logic trig_type;
+    input logic trig_type;
     output logic clr_trig_cnt;
     output logic clr_dec_cnt;
     output logic en_dec_cnt;
@@ -50,10 +50,9 @@ module capture_hint(clk, rst_n, rclk, clr_trig_cnt, clr_dec_cnt, en_dec_cnt, inc
         we = 0;
         en = 0;
         en_trig_cnt = 0;
-        trig_cnt = 0;
         case(state)
             WAIT_TRIG:
-                if(~rclk && trig_type) begin
+                if(~rclk & trig_type) begin
                     nxt_state = SAMP1;
                     clr_trig_cnt= 1;
                     clr_dec_cnt= 1;
@@ -68,8 +67,17 @@ module capture_hint(clk, rst_n, rclk, clr_trig_cnt, clr_dec_cnt, en_dec_cnt, inc
                 en = keep_ff;
             end
             SAMP2:begin
-                if(trig_cnt == trig_pos)
+                if(trig_cnt == trig_pos) begin
+                    // Finish aquisition
+                    //    - Set capture_done
+                    //    - Save address pointer in trace_end
+                    //    - clear armed
+                    // What happens next?
+                    //    1. Wait for capture_done to be cleared
+                    //    2. Start again
+                    // Maybe go back to WAIT_TRIG instead of DONE
                     nxt_state = DONE;
+                end
                 else begin
                     en = keep;
                     we = keep;
@@ -99,22 +107,44 @@ module capture_hint_tb;
     logic we; // Output
     logic en; // Output 
     logic en_trig_cnt; // Output
-    logic trig_cnt;
+    logic [8:0] trig_cnt;
     logic [15:0] dec_cnt;
     logic [8:0] trig_pos;
     logic trigger;
     logic autoroll;
     logic armed;
+    logic [15:0] dec_pwr;
 
+
+    capture_hint c1(
+    .clk(clk),
+    .rst_n(rst_n),
+    .rclk(rclk),
+    .clr_trig_cnt(clr_trig_cnt),
+    .clr_dec_cnt(clr_dec_cnt),
+    .en_dec_cnt(en_dec_cnt),
+    .inc_addr(inc_addr),
+    .we(we),
+    .en(en),
+    .en_trig_cnt(en_trig_cnt),
+    .trig_cnt(trig_cnt),
+    .dec_cnt(dec_cnt),
+    .dec_pwr(dec_pwr),
+    .trig_pos(trig_pos),
+    .trigger(trigger),
+    .autoroll(autoroll),
+    .armed(armed),
+    .trig_type(1)
+    );
 
     always_ff @(posedge clk, negedge rst_n)
         if(!rst_n)
-            trig_pos <= 0;
+            trig_cnt <= 0;
         else
             if(clr_trig_cnt)
-                trig_pos <= 0;
+                trig_cnt <= 0;
             else if(en_trig_cnt)
-                trig_pos <= trig_pos + 1;
+                trig_cnt <= trig_cnt + 1;
             else
                 trig_pos <= trig_pos;
 
@@ -136,6 +166,12 @@ module capture_hint_tb;
         rclk = 0;
         rst_n = 0;
         trigger = 0;
+        dec_pwr = 1;
+        trig_pos = 100;
+
+        @(negedge clk) rst_n = 1;
+        repeat(5) @(negedge rclk);
+        trigger = 1;
 
     end
 
