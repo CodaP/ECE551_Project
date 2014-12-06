@@ -4,10 +4,15 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, r
                 // Extra ports
                start_dump, dump_channel, dump_data, send_dump, dump_finished, set_capture_done, trig_cfg);
 	
-	localparam CONFIG_GAIN = 8'h02;
-	localparam SET_TRIGGER = 8'h03;
-	localparam WRITE_EEPROM = 8'h08;
-	localparam READ_EEPROM = 8'h09;
+    localparam DUMP          = 8'h01;
+	localparam CONFIG_GAIN   = 8'h02;
+	localparam SET_TRIGGER   = 8'h03;
+    localparam SET_TRIGPOS   = 8'h04;
+    localparam SET_DEC       = 8'h05;
+    localparam SET_TRIG_CFG  = 8'h06;
+    localparam READ_TRIG_CFG = 8'h07;
+	localparam WRITE_EEPROM  = 8'h08;
+	localparam READ_EEPROM   = 8'h09;
     localparam ACK = 8'hA5;
     localparam NACK = 8'hEE;
 
