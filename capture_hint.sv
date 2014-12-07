@@ -1,7 +1,7 @@
 typedef enum logic [1:0] {WAIT_TRIG, SAMP1, SAMP2, DONE} State;
 typedef logic[8:0] Address;
 
-module capture_hint(clk, rst_n, rclk, trigger, trig_type, dec_pwr,
+module capture_hint(clk, rst_n, rclk, trigger, trig_type, trig_pos, dec_pwr,
         en, we, addr, armed,
         
         start_dump, dump_channel,
@@ -10,32 +10,32 @@ module capture_hint(clk, rst_n, rclk, trigger, trig_type, dec_pwr,
     State state;
     State nxt_state;
 
-    input clk, rst_n;
-    input rclk;
-    input trigger;
-    input [1:0] trig_type;
-    input [3:0] dec_pwr;
-    output logic en;
-    output logic we;
-    output Address addr;
-    output logic armed;
+    input clk, rst_n; // Clock and active-low asynchronous reset
+    input rclk; // The ram clock
+    input trigger; // The trigger
+    input [1:0] trig_type; // The trigger type
+    input Address trig_pos; // The number of triggers for a single capture cycle
+    input [3:0] dec_pwr; // The sampling decimator
+    output logic en; // Enable the ram
+    output logic we; // Write the ram if enabled
+    output Address addr; // The ram address to write to
+    output logic armed; // Is trigger armed?
 
-    input start_dump;
-    input [1:0] dump_channel;
-    output logic [7:0] dump_data;
-    output logic send_dump;
-    output logic dump_finished;
+    input start_dump; // Whether a dump should begin
+    input [1:0] dump_channel; // The channel to dump
+    output logic [7:0] dump_data; // The data being dumped
+    output logic send_dump; // Whether dump_data is valid
+    output logic dump_finished; // Whether the dump is finished
 
-    logic autoroll;
+    logic autoroll; // Whether the trigger is on autoroll
 
-    logic next_armed;
-    logic [15:0] dec_cnt, next_dec_cnt;
-    logic keep;
-    logic keep_ff;
-    Address next_addr;
-    Address trig_pos, next_trig_pos;
-    Address trig_cnt, next_trig_cnt;
-    Address smpl_cnt, next_smpl_cnt;
+    logic next_armed; // The next value for the armed register
+    logic [15:0] dec_cnt, next_dec_cnt; // The decimator counter
+    logic keep; // Whether a value should be kept
+    logic keep_ff; // The preserved value of keep from last cycle
+    Address next_addr; // The next value of the addr register
+    Address trig_cnt, next_trig_cnt; // The trigger count
+    Address smpl_cnt, next_smpl_cnt; // The sample count
 
     assign autoroll = trig_type[1];
 
@@ -66,9 +66,6 @@ module capture_hint(clk, rst_n, rclk, trigger, trig_type, dec_pwr,
         trig_cnt <= next_trig_cnt;
 
     always_ff @(posedge clk)
-        trig_pos <= next_trig_pos;
-
-    always_ff @(posedge clk)
         smpl_cnt <= next_smpl_cnt;
 
     always_ff @(posedge clk, negedge rst_n)
@@ -79,7 +76,6 @@ module capture_hint(clk, rst_n, rclk, trigger, trig_type, dec_pwr,
 
     always_comb begin
         next_trig_cnt = trig_cnt;
-        next_trig_pos = trig_pos;
         next_smpl_cnt = smpl_cnt;
         next_addr = addr;
         next_dec_cnt = dec_cnt;
@@ -137,9 +133,8 @@ module capture_hint(clk, rst_n, rclk, trigger, trig_type, dec_pwr,
                 nxt_state = WAIT_TRIG;
         endcase
     end
-
-
 endmodule
+
 
 module capture_hint_tb;
     logic clk;
@@ -152,6 +147,7 @@ module capture_hint_tb;
     logic trigger;
     logic [1:0] trig_type;
     logic [3:0] dec_pwr;
+    Address trig_pos;
 
     logic start_dump;
     logic [1:0] dump_channel;
@@ -169,6 +165,7 @@ module capture_hint_tb;
     .dec_pwr(dec_pwr),
     .trig_type(trig_type),
     .trigger(trigger),
+    .trig_pos(trig_pos),
     .armed(armed),
 
     .start_dump(start_dump),
@@ -185,6 +182,7 @@ module capture_hint_tb;
         trigger = 0;
         dec_pwr = 2;
         trig_type = 1;
+        trig_pos = 100;
 
         start_dump = 0;
         dump_channel = 0;
