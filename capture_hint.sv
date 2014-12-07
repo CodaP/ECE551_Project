@@ -1,11 +1,11 @@
-typedef enum logic [1:0] {WAIT_TRIG, SAMP1, SAMP2, DONE} State;
+typedef enum logic [1:0] {CAP_START, SAMP1, SAMP2, DONE} State;
 typedef logic[8:0] Address;
 
 module capture_hint(clk, rst_n, rclk, trigger, trig_type, trig_pos, dec_pwr,
         en, we, addr, armed,
         
-        start_dump, dump_channel,
-        dump_data, send_dump, dump_finished);
+        start_dump,
+        send_dump, dump_finished);
 
     State state;
     State nxt_state;
@@ -22,8 +22,6 @@ module capture_hint(clk, rst_n, rclk, trigger, trig_type, trig_pos, dec_pwr,
     output logic armed; // Is trigger armed?
 
     input start_dump; // Whether a dump should begin
-    input [1:0] dump_channel; // The channel to dump
-    output logic [7:0] dump_data; // The data being dumped
     output logic send_dump; // Whether dump_data is valid
     output logic dump_finished; // Whether the dump is finished
 
@@ -41,7 +39,7 @@ module capture_hint(clk, rst_n, rclk, trigger, trig_type, trig_pos, dec_pwr,
 
     always_ff @(posedge clk, negedge rst_n)
         if(!rst_n)
-            state <= WAIT_TRIG;
+            state <= CAP_START;
         else
             state <= nxt_state;
 
@@ -83,12 +81,12 @@ module capture_hint(clk, rst_n, rclk, trigger, trig_type, trig_pos, dec_pwr,
         we = 0;
         en = 0;
         case(state)
-            WAIT_TRIG: begin
-                nxt_state = WAIT_TRIG;
+            CAP_START: begin
+                nxt_state = CAP_START;
                 if(|trig_type & ~rclk) begin
                     nxt_state = SAMP1;
                     next_trig_cnt = 0;
-                    next_smpl_cnt = 0;
+                    next_smpl_cnt = 0; // TODO:[opt] having both trig_cnt and smpl_cnt is redundant
                     next_dec_cnt = 0;
                 end
             end
@@ -105,21 +103,26 @@ module capture_hint(clk, rst_n, rclk, trigger, trig_type, trig_pos, dec_pwr,
                     // Finish aquisition
                     //    - Set capture_done
                     //    - Save address pointer in trace_end
+                    //      - or use trig_base_addr and use one bit instead of
+                    //        a 9-bit subtracter
                     //    - clear armed
                     next_armed = 0;
                     // What happens next?
                     //    1. Wait for capture_done to be cleared
                     //    2. Start again
-                    // Maybe go back to WAIT_TRIG instead of DONE
+                    // Maybe go back to CAP_START instead of DONE
                 end else begin
                     nxt_state = SAMP1;
                     en = keep;
                     we = keep;
                     if (keep) begin
                         next_dec_cnt = 0;
-                        if (trigger || autoroll && armed)
-                            next_trig_cnt = trig_cnt + 1; // Martin doesn't understand this line :( - isn't this in the Trigger module?
-                        else begin
+                        if (trigger || autoroll && armed) begin
+                            // TODO:[func] Detect if this is the first trigger and
+                            // if so, save off addr as trig_base_addr or
+                            // something similar
+                            next_trig_cnt = trig_cnt + 1;
+                        end else begin
                             next_smpl_cnt = smpl_cnt + 1;
                             if (smpl_cnt + trig_pos == 10'h200)
                                 next_armed = 1; // when is armed unset?
@@ -128,9 +131,9 @@ module capture_hint(clk, rst_n, rclk, trigger, trig_type, trig_pos, dec_pwr,
                 end
             end
             DONE:
-                nxt_state = WAIT_TRIG;
-            default: 
-                nxt_state = WAIT_TRIG;
+                nxt_state = CAP_START;
+            default:
+                nxt_state = CAP_START;
         endcase
     end
 endmodule
@@ -150,8 +153,6 @@ module capture_hint_tb;
     Address trig_pos;
 
     logic start_dump;
-    logic [1:0] dump_channel;
-    logic [7:0] dump_data; // Output
     logic send_dump; // Output
     logic dump_finished; // Output
 
@@ -169,8 +170,6 @@ module capture_hint_tb;
     .armed(armed),
 
     .start_dump(start_dump),
-    .dump_channel(dump_channel),
-    .dump_data(dump_data),
     .send_dump(send_dump),
     .dump_finished(dump_finished)
     );
