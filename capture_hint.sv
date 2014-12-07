@@ -167,7 +167,8 @@ module capture_hint_tb;
     logic [1:0] trig_type;
     logic [3:0] dec_pwr;
     Address trig_pos;
-    logic capture_done, next_capture_done;
+    Address trig_addr;
+    logic capture_done;
 
     logic start_dump;
     logic send_dump; // Output
@@ -184,6 +185,7 @@ module capture_hint_tb;
     .trig_type(trig_type),
     .trigger(trigger),
     .trig_pos(trig_pos),
+    .trig_addr(trig_addr),
     .armed(armed),
     .capture_done(capture_done),
     .set_capture_done(set_capture_done),
@@ -213,7 +215,7 @@ module capture_hint_tb;
         start_dump = 0;
 
         @(negedge clk) rst_n = 1;
-        repeat(101) @(negedge rclk);
+        while(!armed) @(posedge clk);
         trigger = 1;
         while(!capture_done) @(posedge clk);
 
