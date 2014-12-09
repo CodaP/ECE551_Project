@@ -46,21 +46,21 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
 
   TwoTrigger tt(clk, rst_n, trig_cfg[0], trig_cfg[2], trig_cfg[4] ,armed, trig1, trig2, trig_cfg[5], trigger);
 
-  Capture capture1(clk,
-                   rst_n,
-                   trigger,
-                   en,
-                   we,
-                   addr,
-                   start_dump,
-                   dump_channel,
-                   dump_data,
-                   send_dump,
-                   dump_finished,
-                   armed,
-                   trig_cfg,
-                   decimator,
-                   trig_pos);
+  Capture capture1(.clk(clk),
+                   .rst_n(rst_n),
+                   .trigger(trigger),
+                   .en(en),
+                   .we(we),
+                   .addr(addr),
+                   .start_dump(start_dump),
+                   .dump_channel(dump_channel),
+                   .dump_data(dump_data),
+                   .send_dump(send_dump),
+                   .dump_finished(dump_finished),
+                   .armed(armed),
+                   .trig_cfg(trig_cfg),
+                   .decimator(decimator),
+                   .trig_pos(trig_pos));
 
   cmd_module c(clk,
                rst_n,

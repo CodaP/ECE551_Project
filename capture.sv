@@ -1,11 +1,11 @@
 module Capture(clk, rst_n, trigger, en, we, addr, start_dump, dump_channel, dump_data, send_dump, dump_finished, armed, trig_cfg, decimator, trig_pos);
-    input clk,rst_n;
-    input trigger;
+    input logic clk,rst_n;
+    input logic trigger;
     output logic en;
     output logic we;
     output logic [8:0] addr;
-    input start_dump;
-    input [1:0] dump_channel;
+    input logic start_dump;
+    input logic [1:0] dump_channel;
     output logic [7:0] dump_data;
     output logic send_dump;
     output logic dump_finished;

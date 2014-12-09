@@ -47,7 +47,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, r
     output logic [8:0] trig_pos;
     logic [8:0] nxt_trig_pos;
 
-    typedef enum logic [2:0] { DISPATCH_CMD, WRT_EEP, RD_EEP_0, RD_EEP_1, RD_EEP_2 } State;
+    typedef enum logic [2:0] { DISPATCH_CMD, WRT_EEP, RD_EEP_0, RD_EEP_1, RD_EEP_2, DUMP_STATE } State;
 
     State state;
     State nxt_state;
@@ -91,6 +91,8 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, r
         nxt_decimator = decimator;
         nxt_trig_pos = trig_pos;
         nxt_trig_cfg = trig_cfg;
+        start_dump = 0;
+        dump_channel = 0;
         case(state)
             // Direct SM to handle cmd
             DISPATCH_CMD:
@@ -98,6 +100,9 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, r
                     clr_cmd_rdy = 1;
                     case(cmd[19:16])
                         DUMP: begin
+                            nxt_state = DUMP_STATE;
+                            start_dump = 1;
+                            dump_channel = cmd[9:8];
                         end
                         SET_TRIGPOS: begin
                             nxt_trig_pos = cmd[8:0];
@@ -221,6 +226,21 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, r
                 end
                 else
                     nxt_state = RD_EEP_2;
+            end
+            DUMP_STATE:begin
+                // Need Flow control with the UART
+                if(send_dump) begin
+                    resp_data = dump_data;
+                    send_resp = 1;
+                    nxt_state = DUMP_STATE;
+                end
+                else if(dump_finished) begin
+                    nxt_state = DISPATCH_CMD;
+                end
+                else begin
+                    nxt_state = DUMP_STATE;
+                end
+
             end
 
             default: nxt_state = DISPATCH_CMD;

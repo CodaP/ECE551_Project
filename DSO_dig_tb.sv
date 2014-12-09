@@ -134,11 +134,40 @@ initial begin
   @(negedge clk)  clr_resp_rdy = 1;
   @(negedge clk)  clr_resp_rdy = 0;
 
+  // Test dump
+  iDUT.core.capture1.dump_data = 8'hAA;
+  iDUT.core.capture1.send_dump = 0;
+  iDUT.core.capture1.dump_finished = 0;
+  send_uart_no_resp({DUMP_CH, 8'h01, 8'hxx});
+  repeat(20) begin
+      @(negedge clk);
+      iDUT.core.capture1.send_dump = 1;
+      @(negedge clk);
+      iDUT.core.capture1.send_dump = 0;
+      // wait for sample
+      if(!resp_rdy)
+          @(posedge resp_rdy)
+      if(resp_rcv != 8'hAA)
+          fail = 1;
+      @(negedge clk)  clr_resp_rdy = 1;
+      @(negedge clk)  clr_resp_rdy = 0;
+      repeat(20) @(negedge clk);
+  end
+  @(negedge clk) iDUT.core.capture1.dump_finished = 1;
+  @(negedge clk) iDUT.core.capture1.dump_finished = 0;
+  repeat(20) @(negedge clk);
+
   $stop;
 
 end
 
 task send_uart(input reg [23:0] input_cmd);
+    send_uart_no_resp(input_cmd);
+      if(!resp_rdy)
+          @(posedge resp_rdy);
+endtask
+
+task send_uart_no_resp(input reg [23:0] input_cmd);
 
   cmd_snd = input_cmd[23:16];
   @(negedge clk);
@@ -158,8 +187,6 @@ task send_uart(input reg [23:0] input_cmd);
   @(negedge clk);
   send_cmd = 0;
   @(posedge cmd_sent);
-  if(!resp_rdy)
-      @(posedge resp_rdy);
 
 endtask
 
