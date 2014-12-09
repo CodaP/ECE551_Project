@@ -70,6 +70,7 @@ initial begin
   repeat(10) @(negedge clk);
   rst_n = 1;
   
+  // Test configure gain
   send_uart({CFG_GAIN, 8'b00011100, 8'hxx });
 
   if(resp_rcv != 8'hA5)
@@ -77,6 +78,7 @@ initial begin
   @(negedge clk)  clr_resp_rdy = 1;
   @(negedge clk)  clr_resp_rdy = 0;
 
+  // Test write eeprom
   send_uart({EEP_WRT, 8'b00101010, 8'h99});
 
   if(resp_rcv != 8'hA5)
@@ -84,14 +86,50 @@ initial begin
   @(negedge clk)  clr_resp_rdy = 1;
   @(negedge clk)  clr_resp_rdy = 0;
 
+  // Test read eeprom
   send_uart({EEP_RD, 8'b00101010, 8'hxx});
   if(resp_rcv != 8'h99)
       fail = 1;
   @(negedge clk)  clr_resp_rdy = 1;
   @(negedge clk)  clr_resp_rdy = 0;
 
+  // Test set trig_lvl
   send_uart({TRIG_LVL, 8'hxx, 8'h80});
   if(resp_rcv != 8'hA5)
+      fail = 1;
+  @(negedge clk)  clr_resp_rdy = 1;
+  @(negedge clk)  clr_resp_rdy = 0;
+
+  // Test set trig_pos
+  send_uart({TRIG_POS, 7'hxx, 9'h80});
+  if(resp_rcv != 8'hA5)
+      fail = 1;
+  if(iDUT.core.trig_pos != 9'h80)
+      fail = 1;
+  @(negedge clk)  clr_resp_rdy = 1;
+  @(negedge clk)  clr_resp_rdy = 0;
+
+  // Test set decimator
+  send_uart({SET_DEC, 8'hxx, 8'h0F});
+  if(resp_rcv != 8'hA5)
+      fail = 1;
+  if(iDUT.core.decimator != 4'hF)
+      fail = 1;
+  @(negedge clk)  clr_resp_rdy = 1;
+  @(negedge clk)  clr_resp_rdy = 0;
+
+  // Test write trig_cfg
+  send_uart({TRIG_CFG, 8'h3F, 8'hxx});
+  if(resp_rcv != 8'hA5)
+      fail = 1;
+  if(iDUT.core.trig_cfg != 6'h3F)
+      fail = 1;
+  @(negedge clk)  clr_resp_rdy = 1;
+  @(negedge clk)  clr_resp_rdy = 0;
+
+  // Test read trig_cfg
+  send_uart({TRIG_RD, 8'hxx, 8'hxx});
+  if(resp_rcv != 8'h3F)
       fail = 1;
   @(negedge clk)  clr_resp_rdy = 1;
   @(negedge clk)  clr_resp_rdy = 0;

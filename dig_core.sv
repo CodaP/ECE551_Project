@@ -36,6 +36,8 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
   logic send_dump;
   logic dump_finished;
   logic set_capture_done;
+  logic [3:0] decimator;
+  logic [8:0] trig_pos;
 
 
   ///////////////////////////////////////////////////////
@@ -55,7 +57,10 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
                    dump_data,
                    send_dump,
                    dump_finished,
-                   armed);
+                   armed,
+                   trig_cfg,
+                   decimator,
+                   trig_pos);
 
   cmd_module c(clk,
                rst_n,
@@ -79,7 +84,9 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
                dump_finished, // input from Capture
                set_capture_done, // input from Capture for trigger
                // Trigger options for help triggering
-               trig_cfg // output [5:0] to trigger
+               trig_cfg, // output [5:0] to trigger
+               decimator,
+               trig_pos
                );
 
 endmodule

@@ -2,7 +2,7 @@
 
 module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, resp_sent, ss, wrt_SPI, SPI_data, EEP_data, SPI_done,
                 // Extra ports
-               start_dump, dump_channel, dump_data, send_dump, dump_finished, set_capture_done, trig_cfg);
+               start_dump, dump_channel, dump_data, send_dump, dump_finished, set_capture_done, trig_cfg, decimator, trig_pos);
 	
     enum logic [7:0] {  DUMP          = 8'h01,
                         CONFIG_GAIN   = 8'h02,
@@ -41,6 +41,11 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, r
     input set_capture_done; // input from Capture for trigger
     // Trigger options for help triggering
     output logic [5:0] trig_cfg; // output [5:0] to trigger
+    logic [5:0] nxt_trig_cfg;
+    output logic [3:0] decimator;
+    logic [3:0] nxt_decimator;
+    output logic [8:0] trig_pos;
+    logic [8:0] nxt_trig_pos;
 
     typedef enum logic [2:0] { DISPATCH_CMD, WRT_EEP, RD_EEP_0, RD_EEP_1, RD_EEP_2 } State;
 
@@ -54,6 +59,27 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, r
             state <= nxt_state;
     end
 
+    always_ff @(posedge clk, negedge rst_n) begin
+        if(!rst_n)
+            decimator <= 0;
+        else
+            decimator <= nxt_decimator;
+    end
+
+    always_ff @(posedge clk, negedge rst_n) begin
+        if(!rst_n)
+            trig_cfg <= 0;
+        else
+            trig_cfg <= nxt_trig_cfg;
+    end
+
+    always_ff @(posedge clk, negedge rst_n) begin
+        if(!rst_n)
+            trig_pos <= 0;
+        else
+            trig_pos <= nxt_trig_pos;
+    end
+
     always_comb begin
         clr_cmd_rdy = 0;
         resp_data = 8'hxx;
@@ -61,12 +87,38 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, r
         ss = SS_NONE;
         wrt_SPI = 0;
         SPI_data = 16'hxxxx;
+        nxt_state = DISPATCH_CMD;
+        nxt_decimator = decimator;
+        nxt_trig_pos = trig_pos;
+        nxt_trig_cfg = trig_cfg;
         case(state)
             // Direct SM to handle cmd
             DISPATCH_CMD:
                 if(cmd_rdy) begin
                     clr_cmd_rdy = 1;
                     case(cmd[19:16])
+                        DUMP: begin
+                        end
+                        SET_TRIGPOS: begin
+                            nxt_trig_pos = cmd[8:0];
+                            resp_data = ACK;
+                            send_resp = 1;
+                        end
+                        SET_DEC: begin
+                            nxt_decimator = cmd[3:0];
+                            resp_data = ACK;
+                            send_resp = 1;
+                        end
+                        SET_TRIG_CFG: begin
+                            nxt_trig_cfg = cmd[13:8];
+                            resp_data = ACK;
+                            send_resp = 1;
+                        end
+                        READ_TRIG_CFG: begin
+                            resp_data = trig_cfg;
+                            send_resp = 1;
+                        end
+
                         CONFIG_GAIN:begin
                             nxt_state = WRT_EEP;
                             wrt_SPI = 1;
