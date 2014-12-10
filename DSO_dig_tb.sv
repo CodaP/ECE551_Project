@@ -109,8 +109,8 @@ initial begin
   @(negedge clk)  clr_resp_rdy = 1;
   @(negedge clk)  clr_resp_rdy = 0;
 
-  // Test set decimator
-  send_uart({SET_DEC, 8'hxx, 8'h0F});
+  // Test set decimator to 2
+  send_uart({SET_DEC, 8'hxx, 8'h02});
   if(resp_rcv != 8'hA5)
       fail = 1;
   if(iDUT.core.decimator != 4'hF)
@@ -118,8 +118,9 @@ initial begin
   @(negedge clk)  clr_resp_rdy = 1;
   @(negedge clk)  clr_resp_rdy = 0;
 
-  // Test write trig_cfg
-  send_uart({TRIG_CFG, 8'h3F, 8'hxx});
+  // Test write trig_cfg for capture_done = 0, trigger_edge = posedge(1)
+  // trigger_type = autoroll (10), trigger_source = channel1(00)
+  send_uart({TRIG_CFG, 8'h18, 8'hxx});
   if(resp_rcv != 8'hA5)
       fail = 1;
   if(iDUT.core.trig_cfg != 6'h3F)
@@ -150,15 +151,17 @@ initial begin
   @(negedge clk)  clr_resp_rdy = 1;
   @(negedge clk)  clr_resp_rdy = 0;
 
+  repeat(5000) @(negedge clk);
+
   // Test dump
   send_uart_no_resp({DUMP_CH, 8'h00, 8'hxx});
   // wait for sample
-  if(!resp_rdy)
-      @(posedge resp_rdy)
-  if(resp_rcv != 8'hAA)
-      fail = 1;
-  @(negedge clk)  clr_resp_rdy = 1;
-  @(negedge clk)  clr_resp_rdy = 0;
+  repeat(500) begin
+      if(!resp_rdy)
+          @(posedge resp_rdy)
+      @(negedge clk)  clr_resp_rdy = 1;
+      @(negedge clk)  clr_resp_rdy = 0;
+  end
   repeat(20) @(negedge clk);
 
   $stop;

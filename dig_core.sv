@@ -43,6 +43,17 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
                        (dump_channel == 1) ? ch2_rdata:
                                              ch3_rdata;
 
+    logic resp_sent_last;
+    logic resp_sent_edge;
+
+    always_ff @(posedge clk, negedge rst_n)
+        if(!rst_n)
+            resp_sent_last <= 0;
+        else
+            resp_sent_last <= resp_sent;
+
+    assign resp_sent_edge = ~resp_sent_last & resp_sent;
+
     ///////////////////////////////////////////////////////
     // Instantiate the blocks of your digital core next //
     /////////////////////////////////////////////////////
@@ -82,7 +93,7 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
         .armed(armed),
         .set_capture_done(set_capture_done),
         .start_dump(start_dump),
-        .dump_sent(resp_sent),
+        .dump_sent(resp_sent_edge),
         .send_dump(send_dump),
         .dump_finished(dump_finished)
     );
