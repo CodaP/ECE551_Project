@@ -41,11 +41,17 @@ module capture_tb;
     .dump_finished(dump_finished)
     );
 
+    logic waiting;
+    logic[3:0] waiter;
     always_ff @(posedge clk, negedge rst_n)
-        if (!rst_n)
-            dump_sent <= 0;
-        else
-            dump_sent <= send_dump;
+        if (!rst_n) begin
+            waiter <= 4'hF;
+        end else begin
+            waiter <= waiting ? waiter + 1 : waiter;
+        end
+
+    assign waiting = !dump_sent || send_dump;
+    assign dump_sent = &waiter;
 
     always_ff @(posedge clk, negedge rst_n)
         if (!rst_n)

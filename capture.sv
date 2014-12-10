@@ -1,4 +1,4 @@
-typedef enum logic [2:0] {CAP_START, SAMP_RPOS, SAMP_RNEG, DUMP_RNEG, DUMP_RPOS, DUMP_SEND} State;
+typedef enum logic [2:0] {CAP_START, SAMP_RPOS, SAMP_RNEG, DUMP_RNEG, DUMP_RPOS, DUMP_SEND, DUMP_WAIT} State;
 typedef logic[8:0] Address;
 
 module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec_pwr,
@@ -154,6 +154,11 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
                     en = 1;
                 end
                 DUMP_SEND: begin
+                    nxt_state = DUMP_WAIT;
+                    send_dump = 1;
+                    en = 1;
+                end
+                DUMP_WAIT: begin
                     en = 1;
                     if (dump_sent) begin
                         if (addr == trace_end) begin
@@ -167,7 +172,7 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
                                 nxt_state = DUMP_RPOS;
                         end
                     end else begin
-                        nxt_state = DUMP_SEND;
+                        nxt_state = DUMP_WAIT;
                         send_dump = 1;
                     end
                 end
