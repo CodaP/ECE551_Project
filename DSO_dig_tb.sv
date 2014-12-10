@@ -133,13 +133,28 @@ initial begin
       fail = 1;
   @(negedge clk)  clr_resp_rdy = 1;
   @(negedge clk)  clr_resp_rdy = 0;
+    
+  // Set ch1 ggg=111 gain
+  send_uart({EEP_WRT, 8'b00001110, 8'h01});
+
+  if(resp_rcv != 8'hA5)
+      fail = 1;
+  @(negedge clk)  clr_resp_rdy = 1;
+  @(negedge clk)  clr_resp_rdy = 0;
+    
+  // Set ch1 ggg=111 offset
+  send_uart({EEP_WRT, 8'b00001111, 8'h80});
+
+  if(resp_rcv != 8'hA5)
+      fail = 1;
+  @(negedge clk)  clr_resp_rdy = 1;
+  @(negedge clk)  clr_resp_rdy = 0;
 
   // Test dump
-  iDUT.iRAM1.mem[0] = 8'h00;
   iDUT.core.capture1.addr = 9'h00;
   iDUT.core.capture1.send_dump = 0;
   iDUT.core.capture1.dump_finished = 0;
-  send_uart_no_resp({DUMP_CH, 8'h01, 8'hxx});
+  send_uart_no_resp({DUMP_CH, 8'h00, 8'hxx});
   repeat(20) begin
       @(negedge clk);
       iDUT.core.capture1.send_dump = 1;

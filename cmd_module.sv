@@ -34,6 +34,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
     //Extra ports
     output logic start_dump; // output to Capture
     output logic [1:0] dump_channel; // output to Capture
+    logic [1:0] nxt_dump_channel;
     input [7:0] dump_data; // input [7:0] from Capture
     input send_dump; // input from Capture
     input dump_finished; // input from Capture
@@ -53,10 +54,36 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
     logic [2:0] ch3_ggg;
     logic [2:0] nxt_ch3_ggg;
 
-    typedef enum logic [2:0] { DISPATCH_CMD, WRT_EEP, RD_EEP_0, RD_EEP_1, RD_EEP_2, DUMP_STATE, DUMP_READ_EEP } State;
+    logic [7:0] offset;
+    logic [7:0] nxt_offset;
+    logic [7:0] gain;
+    logic [7:0] nxt_gain;
+
+    typedef enum logic [3:0] { DISPATCH_CMD, WRT_EEP, RD_EEP_0, RD_EEP_1, RD_EEP_2, DUMP_STATE, DUMP_TX_OFFSET_REQUEST, DUMP_STALL_OFFSET, DUMP_TX_GAIN_REQUEST, DUMP_STALL_GAIN, DUMP_TX_GARBAGE_REQUEST } State;
 
     State state;
     State nxt_state;
+
+    always_ff @(posedge clk, negedge rst_n) begin
+        if(!rst_n)
+            offset <= 0;
+        else
+            offset <= nxt_offset;
+    end
+
+    always_ff @(posedge clk, negedge rst_n) begin
+        if(!rst_n)
+            gain <= 0;
+        else
+            gain <= nxt_gain;
+    end
+
+    always_ff @(posedge clk, negedge rst_n) begin
+        if(!rst_n)
+            dump_channel <= 0;
+        else
+            dump_channel <= nxt_dump_channel;
+    end
 
 
     always_ff @(posedge clk, negedge rst_n) begin
@@ -114,7 +141,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
         send_resp = 0;
         ss = SS_NONE;
         wrt_SPI = 0;
-        SPI_data = 16'hxxxx;
+        SPI_data = 16'h0xxx;
         nxt_state = DISPATCH_CMD;
         nxt_decimator = decimator;
         nxt_trig_pos = trig_pos;
@@ -122,8 +149,10 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
         nxt_ch1_ggg = ch1_ggg;
         nxt_ch2_ggg = ch2_ggg;
         nxt_ch3_ggg = ch3_ggg;
+        nxt_offset = offset;
+        nxt_gain = gain;
         start_dump = 0;
-        dump_channel = 0;
+        nxt_dump_channel = dump_channel;
         case(state)
             // Direct SM to handle cmd
             DISPATCH_CMD:
@@ -131,13 +160,17 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
                     clr_cmd_rdy = 1;
                     case(cmd[19:16])
                         DUMP: begin
-                            nxt_state = DUMP_STATE;
-                            start_dump = 1;
-                            dump_channel = cmd[9:8];
-                            //wrt_SPI = 1;
-                            //ss = SS_EEPROM;
-                            // Read from EEPROM cmd[13:8] (addr) cmd[7:0] (data)
-                            //SPI_data = {2'b00, cmd[9:8], ggg,og};
+                            nxt_state = DUMP_TX_OFFSET_REQUEST;
+                            nxt_dump_channel = cmd[9:8];
+                            wrt_SPI = 1;
+                            ss = SS_EEPROM;
+                            // Read offset from EEPROM cmd[13:8] (addr) cmd[7:0] (data)
+                            if(nxt_dump_channel == 0)
+                                SPI_data = {2'b00, nxt_dump_channel, ch1_ggg, 1'b0, 8'hxx};
+                            else if(nxt_dump_channel == 1)
+                                SPI_data = {2'b00, nxt_dump_channel, ch2_ggg, 1'b0, 8'hxx};
+                            else 
+                                SPI_data = {2'b00, nxt_dump_channel, ch3_ggg, 1'b0, 8'hxx};
                         end
                         SET_TRIGPOS: begin
                             nxt_trig_pos = cmd[8:0];
@@ -250,7 +283,6 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
                     nxt_state = RD_EEP_2;
                     wrt_SPI = 1;
                     ss = SS_EEPROM;
-                    SPI_data = {2'b00, 14'h0000};
                 end
                 else
                     nxt_state = RD_EEP_1;
@@ -266,6 +298,54 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
                 end
                 else
                     nxt_state = RD_EEP_2;
+            end
+            DUMP_TX_OFFSET_REQUEST: begin
+                nxt_state = DUMP_TX_OFFSET_REQUEST;
+                if(SPI_done) begin
+                    wrt_SPI = 1;
+                    nxt_state = DUMP_STALL_OFFSET;
+                    ss = SS_NONE;
+                end
+            end
+
+            DUMP_STALL_OFFSET: begin
+                nxt_state = DUMP_STALL_OFFSET;
+                if(SPI_done) begin
+                    wrt_SPI = 1;
+                    nxt_state = DUMP_TX_GAIN_REQUEST;
+                    ss = SS_EEPROM;
+                    if(dump_channel == 0)
+                        SPI_data = {2'b00, dump_channel, ch1_ggg, 1'b1, 8'hxx};
+                    else if(dump_channel == 1)
+                        SPI_data = {2'b00, dump_channel, ch2_ggg, 1'b1, 8'hxx};
+                    else 
+                        SPI_data = {2'b00, dump_channel, ch3_ggg, 1'b1, 8'hxx};
+                end
+            end
+            DUMP_TX_GAIN_REQUEST: begin
+                nxt_state = DUMP_TX_GAIN_REQUEST;
+                if(SPI_done) begin
+                    wrt_SPI = 1;
+                    ss = SS_NONE;
+                    nxt_state = DUMP_STALL_GAIN;
+                    nxt_offset = EEP_data;
+                end
+            end
+            DUMP_STALL_GAIN: begin
+                nxt_state = DUMP_STALL_GAIN;
+                if(SPI_done) begin
+                    wrt_SPI = 1;
+                    ss = SS_EEPROM;
+                    nxt_state = DUMP_TX_GARBAGE_REQUEST;
+                end
+            end
+            DUMP_TX_GARBAGE_REQUEST: begin
+                nxt_state = DUMP_TX_GARBAGE_REQUEST;
+                if(SPI_done) begin
+                    nxt_state = DUMP_STATE;
+                    nxt_gain = EEP_data;
+                    start_dump = 1;
+                end
             end
             DUMP_STATE:begin
                 // Need Flow control with the UART
