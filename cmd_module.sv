@@ -54,8 +54,8 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
     logic [2:0] ch3_ggg;
     logic [2:0] nxt_ch3_ggg;
 
-    logic [7:0] offset;
-    logic [7:0] nxt_offset;
+    logic signed [7:0] offset;
+    logic signed [7:0] nxt_offset;
     logic [7:0] gain;
     logic [7:0] nxt_gain;
 
