@@ -19,7 +19,10 @@ wire [7:0] resp_rcv;
 wire [7:0] ch1_data,ch2_data,ch3_data;
 wire trig1,trig2;
 
-integer fd = $fopen("uart_data.txt");
+integer fd_out = $fopen("uart_data.txt","w");
+integer fd_in = $fopen("uart_commands.txt","r");
+reg [23:0] input_cmd;
+reg [7:0] delay;
 
 ///////////////////////////
 // Define command bytes //
@@ -56,7 +59,7 @@ UART iMSTR(.clk(clk), .rst_n(rst_n), .RX(TX), .TX(RX), .rx_data(resp_rcv), .trmt
                      .tx_done(cmd_sent), .rdy(resp_rdy), .tx_data(cmd_snd), .clr_rdy(clr_resp_rdy));
 
 always @(posedge resp_rdy)
-    $fdisplay(fd, "%d", resp_rcv);
+    $fdisplay(fd_out, "%d", resp_rcv);
 
 /////////////////////////////////////
 // Instantiate Calibration EEPROM //
@@ -74,102 +77,20 @@ initial begin
   /////////////////////////////
   repeat(10) @(negedge clk);
   rst_n = 1;
-  
-  // Test configure gain
-  send_uart({CFG_GAIN, 8'b00011100, 8'hxx });
 
-  if(resp_rcv != 8'hA5)
-      fail = 1;
-  @(negedge clk)  clr_resp_rdy = 1;
-  @(negedge clk)  clr_resp_rdy = 0;
-
-  // Test write eeprom
-  send_uart({EEP_WRT, 8'b00101010, 8'h99});
-
-  if(resp_rcv != 8'hA5)
-      fail = 1;
-  @(negedge clk)  clr_resp_rdy = 1;
-  @(negedge clk)  clr_resp_rdy = 0;
-
-  // Test read eeprom
-  send_uart({EEP_RD, 8'b00101010, 8'hxx});
-  if(resp_rcv != 8'h99)
-      fail = 1;
-  @(negedge clk)  clr_resp_rdy = 1;
-  @(negedge clk)  clr_resp_rdy = 0;
-
-  // Test set trig_lvl
-  send_uart({TRIG_LVL, 8'hxx, 8'h80});
-  if(resp_rcv != 8'hA5)
-      fail = 1;
-  @(negedge clk)  clr_resp_rdy = 1;
-  @(negedge clk)  clr_resp_rdy = 0;
-
-  // Test set trig_pos
-  send_uart({TRIG_POS, 7'hxx, 9'h80});
-  if(resp_rcv != 8'hA5)
-      fail = 1;
-  if(iDUT.core.trig_pos != 9'h80)
-      fail = 1;
-  @(negedge clk)  clr_resp_rdy = 1;
-  @(negedge clk)  clr_resp_rdy = 0;
-
-  // Test set decimator to 2
-  send_uart({SET_DEC, 8'hxx, 8'h02});
-  if(resp_rcv != 8'hA5)
-      fail = 1;
-  if(iDUT.core.decimator != 4'hF)
-      fail = 1;
-  @(negedge clk)  clr_resp_rdy = 1;
-  @(negedge clk)  clr_resp_rdy = 0;
-
-  // Test write trig_cfg for capture_done = 0, trigger_edge = posedge(1)
-  // trigger_type = autoroll (10), trigger_source = channel1(00)
-  send_uart({TRIG_CFG, 8'h18, 8'hxx});
-  if(resp_rcv != 8'hA5)
-      fail = 1;
-  if(iDUT.core.trig_cfg != 6'h3F)
-      fail = 1;
-  @(negedge clk)  clr_resp_rdy = 1;
-  @(negedge clk)  clr_resp_rdy = 0;
-
-  // Test read trig_cfg
-  send_uart({TRIG_RD, 8'hxx, 8'hxx});
-  if(resp_rcv != 8'h3F)
-      fail = 1;
-  @(negedge clk)  clr_resp_rdy = 1;
-  @(negedge clk)  clr_resp_rdy = 0;
-    
-  // Set ch1 ggg=111 gain
-  send_uart({EEP_WRT, 8'b00001110, 8'h01});
-
-  if(resp_rcv != 8'hA5)
-      fail = 1;
-  @(negedge clk)  clr_resp_rdy = 1;
-  @(negedge clk)  clr_resp_rdy = 0;
-    
-  // Set ch1 ggg=111 offset
-  send_uart({EEP_WRT, 8'b00001111, 8'h80});
-
-  if(resp_rcv != 8'hA5)
-      fail = 1;
-  @(negedge clk)  clr_resp_rdy = 1;
-  @(negedge clk)  clr_resp_rdy = 0;
-
-  repeat(5000) @(negedge clk);
-
-  // Test dump
-  send_uart_no_resp({DUMP_CH, 8'h00, 8'hxx});
-  // wait for sample
-  repeat(500) begin
-      if(!resp_rdy)
-          @(posedge resp_rdy)
-      @(negedge clk)  clr_resp_rdy = 1;
-      @(negedge clk)  clr_resp_rdy = 0;
+  while($fscanf(fd_in, "%h %h", input_cmd, delay) > 0) begin
+      case(input_cmd)
+        default: begin
+            $fdisplay(fd_out, "#Sending command %h",input_cmd);
+            send_uart(input_cmd);
+            repeat(delay) begin
+                #1;
+            end
+        end
+      endcase
   end
-  repeat(20) @(negedge clk);
-
-  $fclose(fd);
+  
+  $fclose(fd_out);
   $stop;
 
 end
