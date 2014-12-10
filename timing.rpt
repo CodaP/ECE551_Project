@@ -1,0 +1,160 @@
+Information: Updating design information... (UID-85)
+Information: Timing loop detected. (OPT-150)
+	comm/uart0/transmitter/U4/B1 comm/uart0/transmitter/U4/ZN core/capturer/U83/A2 core/capturer/U83/ZN core/capturer/U36/A1 core/capturer/U36/ZN core/capturer/U10/I core/capturer/U10/ZN core/cmdr/U17/I core/cmdr/U17/ZN core/cmdr/U11/A2 core/cmdr/U11/ZN 
+Warning: Disabling timing arc between pins 'B1' and 'ZN' on cell 'comm/uart0/transmitter/U4'
+         to break a timing loop. (OPT-314)
+Warning: Disabling timing arc between pins 'B1' and 'ZN' on cell 'comm/uart0/transmitter/U4'
+         to break a timing loop. (OPT-314)
+Warning: Disabling timing arc between pins 'B1' and 'ZN' on cell 'comm/uart0/transmitter/U4'
+         to break a timing loop. (OPT-314)
+ 
+****************************************
+Report : timing
+        -path full
+        -delay min
+        -max_paths 1
+Design : DSO_dig
+Version: I-2013.12-SP5
+Date   : Tue Dec  9 23:49:53 2014
+****************************************
+
+Operating Conditions: NCCOM   Library: tcbn40lpbwptc
+Wire Load Model Mode: segmented
+
+  Startpoint: comm/uart0/receiver/RX_stabilizer/midstable_reg
+              (rising edge-triggered flip-flop clocked by clk)
+  Endpoint: comm/uart0/receiver/RX_stabilizer/stable_reg
+            (rising edge-triggered flip-flop clocked by clk)
+  Path Group: clk
+  Path Type: min
+
+  Des/Clust/Port     Wire Load Model       Library
+  ------------------------------------------------
+  DetectStableEdge   ZeroWireload          tcbn40lpbwptc
+  Stabilize_RESET1   ZeroWireload          tcbn40lpbwptc
+  Trigger            ZeroWireload          tcbn40lpbwptc
+  DetectTrigger      ZeroWireload          tcbn40lpbwptc
+  UART_rx            ZeroWireload          tcbn40lpbwptc
+  UART_tx            ZeroWireload          tcbn40lpbwptc
+  cmd_module         ZeroWireload          tcbn40lpbwptc
+  Capture            ZeroWireload          tcbn40lpbwptc
+  TwoTrigger         ZeroWireload          tcbn40lpbwptc
+  ClkGen             ZeroWireload          tcbn40lpbwptc
+  UART               ZeroWireload          tcbn40lpbwptc
+  Stabilize          ZeroWireload          tcbn40lpbwptc
+  dig_core           ZeroWireload          tcbn40lpbwptc
+  UART_comm          ZeroWireload          tcbn40lpbwptc
+  DSO_dig            TSMC32K_Lowk_Conservative
+                                           tcbn40lpbwptc
+  SPIMaster          ZeroWireload          tcbn40lpbwptc
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock clk (rise edge)                                   0.00       0.00
+  clock network delay (ideal)                             0.00       0.00
+  comm/uart0/receiver/RX_stabilizer/midstable_reg/CP (DFSNQD1BWP)
+                                                          0.00       0.00 r
+  comm/uart0/receiver/RX_stabilizer/midstable_reg/Q (DFSNQD1BWP)
+                                                          0.12       0.12 f
+  comm/uart0/receiver/RX_stabilizer/stable_reg/D (DFSNQD1BWP)
+                                                          0.00       0.12 f
+  data arrival time                                                  0.12
+
+  clock clk (rise edge)                                   0.00       0.00
+  clock network delay (ideal)                             0.00       0.00
+  clock uncertainty                                       0.15       0.15
+  comm/uart0/receiver/RX_stabilizer/stable_reg/CP (DFSNQD1BWP)
+                                                          0.00       0.15 r
+  library hold time                                       0.02       0.17
+  data required time                                                 0.17
+  --------------------------------------------------------------------------
+  data required time                                                 0.17
+  data arrival time                                                 -0.12
+  --------------------------------------------------------------------------
+  slack (VIOLATED)                                                  -0.06
+
+
+1
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : DSO_dig
+Version: I-2013.12-SP5
+Date   : Tue Dec  9 23:49:53 2014
+****************************************
+
+Operating Conditions: NCCOM   Library: tcbn40lpbwptc
+Wire Load Model Mode: segmented
+
+  Startpoint: core/capturer/dec_cnt_reg[0]
+              (rising edge-triggered flip-flop clocked by clk)
+  Endpoint: core/capturer/dec_cnt_reg[15]
+            (rising edge-triggered flip-flop clocked by clk)
+  Path Group: clk
+  Path Type: max
+
+  Des/Clust/Port     Wire Load Model       Library
+  ------------------------------------------------
+  DetectStableEdge   ZeroWireload          tcbn40lpbwptc
+  Stabilize_RESET1   ZeroWireload          tcbn40lpbwptc
+  Trigger            ZeroWireload          tcbn40lpbwptc
+  DetectTrigger      ZeroWireload          tcbn40lpbwptc
+  UART_rx            ZeroWireload          tcbn40lpbwptc
+  UART_tx            ZeroWireload          tcbn40lpbwptc
+  cmd_module         ZeroWireload          tcbn40lpbwptc
+  Capture            ZeroWireload          tcbn40lpbwptc
+  TwoTrigger         ZeroWireload          tcbn40lpbwptc
+  ClkGen             ZeroWireload          tcbn40lpbwptc
+  UART               ZeroWireload          tcbn40lpbwptc
+  Stabilize          ZeroWireload          tcbn40lpbwptc
+  dig_core           ZeroWireload          tcbn40lpbwptc
+  UART_comm          ZeroWireload          tcbn40lpbwptc
+  DSO_dig            TSMC32K_Lowk_Conservative
+                                           tcbn40lpbwptc
+  SPIMaster          ZeroWireload          tcbn40lpbwptc
+  Capture_DW01_inc_2 ZeroWireload          tcbn40lpbwptc
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock clk (rise edge)                                   0.00       0.00
+  clock network delay (ideal)                             0.00       0.00
+  core/capturer/dec_cnt_reg[0]/CP (DFCNQD1BWP)            0.00       0.00 r
+  core/capturer/dec_cnt_reg[0]/Q (DFCNQD1BWP)             0.14       0.14 r
+  core/capturer/add_120/A[0] (Capture_DW01_inc_2)         0.00       0.14 r
+  core/capturer/add_120/U1_1_1/CO (HA1D0BWP)              0.08       0.21 r
+  core/capturer/add_120/U1_1_2/CO (HA1D0BWP)              0.08       0.29 r
+  core/capturer/add_120/U1_1_3/CO (HA1D0BWP)              0.08       0.37 r
+  core/capturer/add_120/U1_1_4/CO (HA1D0BWP)              0.08       0.44 r
+  core/capturer/add_120/U1_1_5/CO (HA1D0BWP)              0.08       0.52 r
+  core/capturer/add_120/U1_1_6/CO (HA1D0BWP)              0.08       0.59 r
+  core/capturer/add_120/U1_1_7/CO (HA1D0BWP)              0.08       0.67 r
+  core/capturer/add_120/U1_1_8/CO (HA1D0BWP)              0.08       0.75 r
+  core/capturer/add_120/U1_1_9/CO (HA1D0BWP)              0.08       0.82 r
+  core/capturer/add_120/U1_1_10/CO (HA1D0BWP)             0.08       0.90 r
+  core/capturer/add_120/U1_1_11/CO (HA1D0BWP)             0.08       0.97 r
+  core/capturer/add_120/U1_1_12/CO (HA1D0BWP)             0.08       1.05 r
+  core/capturer/add_120/U1_1_13/CO (HA1D0BWP)             0.08       1.13 r
+  core/capturer/add_120/U1_1_14/CO (HA1D0BWP)             0.07       1.19 r
+  core/capturer/add_120/U1/Z (CKXOR2D0BWP)                0.07       1.27 f
+  core/capturer/add_120/SUM[15] (Capture_DW01_inc_2)      0.00       1.27 f
+  core/capturer/U19/Z (AO22D1BWP)                         0.07       1.33 f
+  core/capturer/dec_cnt_reg[15]/D (DFCNQD1BWP)            0.00       1.33 f
+  data arrival time                                                  1.33
+
+  clock clk (rise edge)                                   2.50       2.50
+  clock network delay (ideal)                             0.00       2.50
+  clock uncertainty                                      -0.15       2.35
+  core/capturer/dec_cnt_reg[15]/CP (DFCNQD1BWP)           0.00       2.35 r
+  library setup time                                     -0.01       2.34
+  data required time                                                 2.34
+  --------------------------------------------------------------------------
+  data required time                                                 2.34
+  data arrival time                                                 -1.33
+  --------------------------------------------------------------------------
+  slack (MET)                                                        1.01
+
+
+1
