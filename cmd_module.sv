@@ -228,6 +228,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
             end
             DUMP_STATE:begin
                 // Need Flow control with the UART
+                start_dump = 1;
                 if(send_dump) begin
                     resp_data = dump_data;
                     send_resp = 1;
