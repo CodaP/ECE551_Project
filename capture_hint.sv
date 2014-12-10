@@ -1,10 +1,10 @@
-typedef enum logic [1:0] {CAP_START, SAMP1, SAMP2, DONE} State;
+typedef enum logic [2:0] {CAP_START, SAMP_RPOS, SAMP_RNEG, DUMP_RNEG, DUMP_RPOS, DUMP_SEND} State;
 typedef logic[8:0] Address;
 
 module capture_hint(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec_pwr,
-        en, we, addr, trig_addr, armed, set_capture_done,
+        en, we, addr, armed, set_capture_done,
 
-        start_dump,
+        start_dump, dump_sent,
         send_dump, dump_finished);
 
     State state;
@@ -20,11 +20,11 @@ module capture_hint(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done
     output logic en; // Enable the ram
     output logic we; // Write the ram if enabled
     output Address addr; // The ram address to write to
-    output Address trig_addr; // The address at which trigger occurred
     output logic armed; // Is trigger armed?
     output logic set_capture_done; // Should capture_done be set?
 
     input start_dump; // Whether a dump should begin
+    input dump_sent;
     output logic send_dump; // Whether dump_data is valid
     output logic dump_finished; // Whether the dump is finished
 
@@ -40,7 +40,6 @@ module capture_hint(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done
     Address trace_end, next_trace_end; // The last sample to be captured
 
     assign autoroll = trig_type[1];
-    assign trig_addr = trace_end - trig_pos;
 
     always_ff @(posedge clk, negedge rst_n)
         if(!rst_n)
@@ -62,8 +61,11 @@ module capture_hint(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done
         else
             addr <= next_addr;
 
-    always_ff @(posedge clk)
-        dec_cnt <= next_dec_cnt;
+    always_ff @(posedge clk, negedge rst_n)
+        if (!rst_n)
+            dec_cnt <= 0;
+        else
+            dec_cnt <= next_dec_cnt;
 
     always_ff @(posedge clk)
         trig_cnt <= next_trig_cnt;
@@ -88,68 +90,91 @@ module capture_hint(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done
         next_armed = armed;
         next_trace_end = trace_end;
         set_capture_done = 0;
+        send_dump = 0;
+        dump_finished = 0;
         we = 0;
         en = 0;
-        case(state)
-            CAP_START: begin
-                nxt_state = CAP_START;
-                if(|trig_type & ~rclk) begin
-                    nxt_state = SAMP1;
-                    next_trig_cnt = 0;
-                    next_smpl_cnt = 0; // TODO:[opt] having both trig_cnt and smpl_cnt is redundant
-                    next_dec_cnt = 0;
-                end
+        if (start_dump) begin
+            if (rclk) begin
+                nxt_state = DUMP_RNEG;
+                next_addr = trace_end + 1;
+            end else begin
+                nxt_state = DUMP_RPOS;
+                next_addr = trace_end;
             end
-            SAMP1: begin
-                nxt_state = SAMP2;
-                next_dec_cnt = dec_cnt + 1;
-                next_addr = keep_ff ? addr + 1 : addr;
-                we = keep_ff;
-                en = keep_ff;
-            end
-            SAMP2: begin
-                if(trig_cnt == trig_pos) begin
-                    nxt_state = DONE;
-                    // Finish aquisition
-                    //    - Set capture_done
-                    set_capture_done = 1;
-                    //    - Save address pointer in trace_end
-                    //      - or use trig_base_addr and use one bit instead of
-                    //        a 9-bit subtracter
-                    next_trace_end = addr;
-                    //    - clear armed
-                    next_armed = 0;
-                    // What happens next?
-                    //    1. Wait for capture_done to be cleared
-                    //    2. Start again
-                end else begin
-                    nxt_state = SAMP1;
-                    en = keep;
-                    we = keep;
-                    if (keep) begin
-                        next_dec_cnt = 0;
-                        if (trigger || autoroll && armed) begin
-                            // TODO:[opt] Detect if this is the first trigger and
-                            // if so, save off addr as trig_base_addr or
-                            // something similar
-                            next_trig_cnt = trig_cnt + 1;
-                        end else begin
-                            next_smpl_cnt = smpl_cnt + 1;
-                            if (smpl_cnt + trig_pos == 10'h200)
-                                next_armed = 1;
+        end else begin
+            case(state)
+                CAP_START: begin
+                    nxt_state = CAP_START;
+                    if (!capture_done) begin
+                        if (|trig_type & ~rclk) begin
+                            nxt_state = SAMP_RPOS;
+                            next_trig_cnt = 0;
+                            next_smpl_cnt = 0; // TODO:[opt] having both trig_cnt and smpl_cnt is redundant
+                            next_dec_cnt = 0;
                         end
                     end
                 end
-            end
-            DONE: begin
-                nxt_state = DONE;
-                if (!capture_done) begin
-                    nxt_state = CAP_START;
+                SAMP_RPOS: begin
+                    nxt_state = SAMP_RNEG;
+                    next_dec_cnt = dec_cnt + 1;
+                    next_addr = keep_ff ? addr + 1 : addr;
+                    we = keep_ff;
+                    en = keep_ff;
                 end
-            end
-            default:
-                nxt_state = CAP_START;
-        endcase
+                SAMP_RNEG: begin
+                    if(trig_cnt == trig_pos) begin
+                        nxt_state = CAP_START;
+                        set_capture_done = 1;
+                        next_trace_end = addr;
+                        next_armed = 0;
+                    end else begin
+                        nxt_state = SAMP_RPOS;
+                        en = keep;
+                        we = keep;
+                        if (keep) begin
+                            next_dec_cnt = 0;
+                            if (trigger || autoroll && armed) begin
+                                next_trig_cnt = trig_cnt + 1;
+                            end else begin
+                                next_smpl_cnt = smpl_cnt + 1;
+                                if (smpl_cnt + trig_pos == 10'h200)
+                                    next_armed = 1;
+                            end
+                        end
+                    end
+                end
+                DUMP_RPOS: begin
+                    nxt_state = DUMP_RNEG;
+                    next_addr = addr + 1;
+                    en = 1;
+                end
+                DUMP_RNEG: begin
+                    nxt_state = DUMP_SEND;
+                    en = 1;
+                end
+                DUMP_SEND: begin
+                    en = 1;
+                    if (dump_sent) begin
+                        if (addr == trace_end) begin
+                            nxt_state = CAP_START;
+                            dump_finished = 1;
+                        end else begin
+                            if (rclk) begin
+                                nxt_state = DUMP_RNEG;
+                                next_addr = addr + 1;
+                            end else
+                                nxt_state = DUMP_RPOS;
+                        end
+                    end else begin
+                        nxt_state = DUMP_SEND;
+                        send_dump = 1;
+                    end
+                end
+                default:
+                    nxt_state = CAP_START;
+            endcase
+        end
     end
 endmodule
 
@@ -167,10 +192,10 @@ module capture_hint_tb;
     logic [1:0] trig_type;
     logic [3:0] dec_pwr;
     Address trig_pos;
-    Address trig_addr;
     logic capture_done;
 
     logic start_dump;
+    logic dump_sent;
     logic send_dump; // Output
     logic dump_finished; // Output
 
@@ -185,15 +210,21 @@ module capture_hint_tb;
     .trig_type(trig_type),
     .trigger(trigger),
     .trig_pos(trig_pos),
-    .trig_addr(trig_addr),
     .armed(armed),
     .capture_done(capture_done),
     .set_capture_done(set_capture_done),
 
     .start_dump(start_dump),
+    .dump_sent(dump_sent),
     .send_dump(send_dump),
     .dump_finished(dump_finished)
     );
+
+    always_ff @(posedge clk, negedge rst_n)
+        if (!rst_n)
+            dump_sent <= 0;
+        else
+            dump_sent <= send_dump;
 
     always_ff @(posedge clk, negedge rst_n)
         if (!rst_n)
@@ -203,7 +234,7 @@ module capture_hint_tb;
                 capture_done <= 1;
 
     initial begin
-        clk = 0;
+        clk = 1;
         rclk = 0;
         rst_n = 0;
         trigger = 0;
@@ -218,6 +249,13 @@ module capture_hint_tb;
         while(!armed) @(posedge clk);
         trigger = 1;
         while(!capture_done) @(posedge clk);
+        trigger = 0;
+        repeat(20) @(posedge clk);
+        start_dump = 1;
+        @(posedge clk);
+        start_dump = 0;
+        while(!dump_finished) @(posedge clk);
+        repeat(20) @(posedge clk);
 
         $stop;
 
