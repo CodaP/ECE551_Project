@@ -60,7 +60,8 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
                    .armed(armed),
                    .trig_cfg(trig_cfg),
                    .decimator(decimator),
-                   .trig_pos(trig_pos));
+                   .trig_pos(trig_pos),
+                   .dump_sent(resp_sent));
 
   cmd_module c(clk,
                rst_n,
