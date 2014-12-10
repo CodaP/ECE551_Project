@@ -1,4 +1,4 @@
-read_file { DSO_dig.sv UART_comm.sv UART.sv UART_rx.sv UART_tx.sv SPIMaster.sv dig_core.sv cmd_module.sv capture.sv trigger.sv ClkGen.sv RAM512_shell.sv }
+read_file { DSO_dig.sv UART_comm.sv UART.sv UART_rx.sv UART_tx.sv SPIMaster.sv dig_core.sv cmd_module.sv capture.sv trigger.sv ClkGen.sv Correction.sv RAM512_shell.sv }
 set current_design DSO_dig
 create_clock -name "clk" -period 2.5 -waveform { 0 1 } {clk}
 set_dont_touch_network [ find port clk ]
