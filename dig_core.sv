@@ -47,6 +47,13 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
     // Instantiate the blocks of your digital core next //
     /////////////////////////////////////////////////////
 
+    ClkGen clocker(
+        .clk(clk),
+        .rst_n(rst_n),
+        .posclk(rclk),
+        .negclk(adc_clk)
+    );
+
     TwoTrigger triggerer(
         .clk(clk),
         .rst_n(rst_n),
@@ -60,7 +67,7 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
         .trigger(trigger)
     );
 
-    capture_hint capturer(
+    Capture capturer(
         .clk(clk),
         .rst_n(rst_n),
         .rclk(rclk),
