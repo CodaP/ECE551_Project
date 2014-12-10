@@ -138,7 +138,7 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
                                 next_trig_cnt = trig_cnt + 1;
                             end else begin
                                 next_smpl_cnt = smpl_cnt + 1;
-                                if (smpl_cnt + trig_pos == 10'h200)
+                                if (next_smpl_cnt + trig_pos == 10'h200)
                                     next_armed = 1;
                             end
                         end
