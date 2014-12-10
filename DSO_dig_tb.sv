@@ -19,6 +19,8 @@ wire [7:0] resp_rcv;
 wire [7:0] ch1_data,ch2_data,ch3_data;
 wire trig1,trig2;
 
+integer fd = $fopen("uart_data.txt");
+
 ///////////////////////////
 // Define command bytes //
 /////////////////////////
@@ -52,6 +54,9 @@ AFE_A2D iAFE(.clk(clk),.rst_n(rst_n),.adc_clk(adc_clk),.ch1_ss_n(ch1_ss_n),.ch2_
 ///////////////////////////////////////////
 UART iMSTR(.clk(clk), .rst_n(rst_n), .RX(TX), .TX(RX), .rx_data(resp_rcv), .trmt(send_cmd),
                      .tx_done(cmd_sent), .rdy(resp_rdy), .tx_data(cmd_snd), .clr_rdy(clr_resp_rdy));
+
+always @(posedge resp_rdy)
+    $fdisplay(fd, "%d", resp_rcv);
 
 /////////////////////////////////////
 // Instantiate Calibration EEPROM //
@@ -164,6 +169,7 @@ initial begin
   end
   repeat(20) @(negedge clk);
 
+  $fclose(fd);
   $stop;
 
 end
