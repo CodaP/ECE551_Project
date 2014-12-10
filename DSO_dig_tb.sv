@@ -135,7 +135,8 @@ initial begin
   @(negedge clk)  clr_resp_rdy = 0;
 
   // Test dump
-  iDUT.core.capture1.dump_data = 8'hAA;
+  iDUT.iRAM1.mem[0] = 8'h00;
+  iDUT.core.capture1.addr = 9'h00;
   iDUT.core.capture1.send_dump = 0;
   iDUT.core.capture1.dump_finished = 0;
   send_uart_no_resp({DUMP_CH, 8'h01, 8'hxx});

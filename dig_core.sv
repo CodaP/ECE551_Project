@@ -39,6 +39,11 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
   logic [3:0] decimator;
   logic [8:0] trig_pos;
 
+  assign dump_data = (dump_channel == 0) ? ch1_rdata:
+                     (dump_channel == 1) ? ch2_rdata:
+                     (dump_channel == 2) ? ch3_rdata:
+                     8'hxx;
+
 
   ///////////////////////////////////////////////////////
   // Instantiate the blocks of your digital core next //
@@ -48,19 +53,20 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
 
   Capture capture1(.clk(clk),
                    .rst_n(rst_n),
+                   .rclk(rclk),
                    .trigger(trigger),
+                   .trig_type(trig_cfg[3:2]),
+                   .trig_pos(trig_pos),
+                   .capture_done(trig_cfg[5]),
+                   .dec_pwr(decimator),
                    .en(en),
                    .we(we),
                    .addr(addr),
+                   .armed(armed),
+                   .set_capture_done(set_capture_done),
                    .start_dump(start_dump),
-                   .dump_channel(dump_channel),
-                   .dump_data(dump_data),
                    .send_dump(send_dump),
                    .dump_finished(dump_finished),
-                   .armed(armed),
-                   .trig_cfg(trig_cfg),
-                   .decimator(decimator),
-                   .trig_pos(trig_pos),
                    .dump_sent(resp_sent));
 
   cmd_module c(clk,
