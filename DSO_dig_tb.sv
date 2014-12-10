@@ -59,7 +59,7 @@ UART iMSTR(.clk(clk), .rst_n(rst_n), .RX(TX), .TX(RX), .rx_data(resp_rcv), .trmt
                      .tx_done(cmd_sent), .rdy(resp_rdy), .tx_data(cmd_snd), .clr_rdy(clr_resp_rdy));
 
 always @(posedge resp_rdy)
-    $fdisplay(fd_out, "%d", resp_rcv);
+    $fdisplay(fd_out, "%h", resp_rcv);
 
 /////////////////////////////////////
 // Instantiate Calibration EEPROM //
@@ -71,7 +71,7 @@ initial begin
   rst_n = 0;			// assert reset
   fail = 0;
   send_cmd = 0;
-  clr_resp_rdy = 0;
+  clr_resp_rdy = 1;
   ///////////////////////////////
   // Your testing goes here!! //
   /////////////////////////////
@@ -79,7 +79,15 @@ initial begin
   rst_n = 1;
 
   while($fscanf(fd_in, "%h %h", input_cmd, delay) > 0) begin
-      case(input_cmd)
+      casex(input_cmd[23:16])
+        DUMP_CH: begin
+            $fdisplay(fd_out, "#Sending command %h (dump)",input_cmd);
+            send_uart(input_cmd);
+            repeat(511) @(posedge resp_rdy);
+            repeat(delay) begin
+                #1;
+            end
+        end
         default: begin
             $fdisplay(fd_out, "#Sending command %h",input_cmd);
             send_uart(input_cmd);
