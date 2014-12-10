@@ -46,16 +46,45 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
     output logic [8:0] trig_pos;
     logic [8:0] nxt_trig_pos;
 
-    typedef enum logic [2:0] { DISPATCH_CMD, WRT_EEP, RD_EEP_0, RD_EEP_1, RD_EEP_2, DUMP_STATE } State;
+    logic [2:0] ch1_ggg;
+    logic [2:0] nxt_ch1_ggg;
+    logic [2:0] ch2_ggg;
+    logic [2:0] nxt_ch2_ggg;
+    logic [2:0] ch3_ggg;
+    logic [2:0] nxt_ch3_ggg;
+
+    typedef enum logic [2:0] { DISPATCH_CMD, WRT_EEP, RD_EEP_0, RD_EEP_1, RD_EEP_2, DUMP_STATE, DUMP_READ_EEP } State;
 
     State state;
     State nxt_state;
+
 
     always_ff @(posedge clk, negedge rst_n) begin
         if(!rst_n)
             state <= DISPATCH_CMD;
         else
             state <= nxt_state;
+    end
+
+    always_ff @(posedge clk, negedge rst_n) begin
+        if(!rst_n)
+            ch1_ggg <= 0;
+        else
+            ch1_ggg <= nxt_ch1_ggg;
+    end
+
+    always_ff @(posedge clk, negedge rst_n) begin
+        if(!rst_n)
+            ch2_ggg <= 0;
+        else
+            ch2_ggg <= nxt_ch2_ggg;
+    end
+
+    always_ff @(posedge clk, negedge rst_n) begin
+        if(!rst_n)
+            ch3_ggg <= 0;
+        else
+            ch3_ggg <= nxt_ch3_ggg;
     end
 
     always_ff @(posedge clk, negedge rst_n) begin
@@ -90,6 +119,9 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
         nxt_decimator = decimator;
         nxt_trig_pos = trig_pos;
         nxt_trig_cfg = trig_cfg;
+        nxt_ch1_ggg = ch1_ggg;
+        nxt_ch2_ggg = ch2_ggg;
+        nxt_ch3_ggg = ch3_ggg;
         start_dump = 0;
         dump_channel = 0;
         case(state)
@@ -102,6 +134,10 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
                             nxt_state = DUMP_STATE;
                             start_dump = 1;
                             dump_channel = cmd[9:8];
+                            //wrt_SPI = 1;
+                            //ss = SS_EEPROM;
+                            // Read from EEPROM cmd[13:8] (addr) cmd[7:0] (data)
+                            //SPI_data = {2'b00, cmd[9:8], ggg,og};
                         end
                         SET_TRIGPOS: begin
                             nxt_trig_pos = cmd[8:0];
@@ -130,14 +166,19 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
                             // Decode cc
                             case(cmd[9:8])
                                 // Channel 1
-                                2'b00:
+                                2'b00:begin
                                     ss = SS_CH1;
+                                    nxt_ch1_ggg = cmd[12:10];
+                                end
                                 // Channel 2
-                                2'b01:
+                                2'b01: begin
                                     ss = SS_CH2;
+                                    nxt_ch2_ggg = cmd[12:10];
+                                end
                                 // Channel 3
                                 default: begin
                                     ss = SS_CH3;
+                                    nxt_ch3_ggg = cmd[12:10];
                                 end
                             endcase
 
