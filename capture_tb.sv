@@ -1,3 +1,5 @@
+typedef logic[8:0] Address;
+
 module capture_tb;
     logic clk;
     logic rst_n;
