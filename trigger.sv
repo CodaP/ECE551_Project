@@ -10,10 +10,10 @@ module Trigger(clk,rst_n,trig_set,armed,trig_en,set_capture_done,trigger);
 	logic next_trigger;
 
 	always_ff @(posedge clk or negedge rst_n) begin
-		if(rst_n) begin
-			trigger <= next_trigger;
-		end else begin
+		if(!rst_n) begin
 			trigger <= 0;
+		end else begin
+			trigger <= next_trigger;
 		end
 	end
 
@@ -67,4 +67,52 @@ module TwoTrigger(clk, rst_n, trigger_source, trig_en, pos_edge, armed, trig1, t
     DetectTrigger dt(clk, rst_n, trig1, trig2, trigger_source, trig_set, pos_edge);
     Trigger trigger1(clk, rst_n, trig_set, armed, trig_en, set_capture_done, trigger);
 
+endmodule
+
+module DetectStableEdge(clk, rst_n, _in, stable, delayed, posEdge, negEdge);
+	parameter RESET = 0;
+
+	input clk, rst_n;
+	input _in;
+	output logic stable;
+	output logic delayed;
+	output logic posEdge;
+	output logic negEdge;
+
+	logic midstable;
+
+	assign posEdge = delayed && !stable;
+	assign negEdge = !delayed && stable;
+
+    always_ff @(posedge clk, negedge rst_n) begin
+        if (!rst_n) begin
+            delayed <= RESET;
+            stable <= RESET;
+            midstable <= RESET;
+        end else begin
+            delayed <= stable;
+            stable <= midstable;
+            midstable <= _in;
+        end
+    end
+
+endmodule
+
+module Stabilize(clk, rst_n, unstable, stable);
+    parameter RESET = 0;
+
+    input clk, rst_n;
+    input unstable;
+    output logic stable;
+    logic midstable;
+
+    always_ff @(posedge clk, negedge rst_n) begin
+        if (!rst_n) begin
+            stable <= RESET;
+            midstable <= RESET;
+        end else begin
+            stable <= midstable;
+            midstable <= unstable;
+        end
+    end
 endmodule
