@@ -59,6 +59,10 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
     logic [7:0] gain;
     logic [7:0] nxt_gain;
 
+    logic [7:0] corrected;
+
+    Correction correction(dump_data,offset,gain,corrected);
+
     typedef enum logic [3:0] { DISPATCH_CMD, WRT_EEP, RD_EEP_0, RD_EEP_1, RD_EEP_2, DUMP_STATE, DUMP_TX_OFFSET_REQUEST, DUMP_STALL_OFFSET, DUMP_TX_GAIN_REQUEST, DUMP_STALL_GAIN, DUMP_TX_GARBAGE_REQUEST } State;
 
     State state;
@@ -350,7 +354,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
             DUMP_STATE:begin
                 // Need Flow control with the UART
                 if(send_dump) begin
-                    resp_data = dump_data;
+                    resp_data = corrected;
                     send_resp = 1;
                     nxt_state = DUMP_STATE;
                 end

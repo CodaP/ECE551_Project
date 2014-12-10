@@ -151,26 +151,14 @@ initial begin
   @(negedge clk)  clr_resp_rdy = 0;
 
   // Test dump
-  iDUT.core.capture1.addr = 9'h00;
-  iDUT.core.capture1.send_dump = 0;
-  iDUT.core.capture1.dump_finished = 0;
   send_uart_no_resp({DUMP_CH, 8'h00, 8'hxx});
-  repeat(20) begin
-      @(negedge clk);
-      iDUT.core.capture1.send_dump = 1;
-      @(negedge clk);
-      iDUT.core.capture1.send_dump = 0;
-      // wait for sample
-      if(!resp_rdy)
-          @(posedge resp_rdy)
-      if(resp_rcv != 8'hAA)
-          fail = 1;
-      @(negedge clk)  clr_resp_rdy = 1;
-      @(negedge clk)  clr_resp_rdy = 0;
-      repeat(20) @(negedge clk);
-  end
-  @(negedge clk) iDUT.core.capture1.dump_finished = 1;
-  @(negedge clk) iDUT.core.capture1.dump_finished = 0;
+  // wait for sample
+  if(!resp_rdy)
+      @(posedge resp_rdy)
+  if(resp_rcv != 8'hAA)
+      fail = 1;
+  @(negedge clk)  clr_resp_rdy = 1;
+  @(negedge clk)  clr_resp_rdy = 0;
   repeat(20) @(negedge clk);
 
   $stop;
