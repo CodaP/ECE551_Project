@@ -70,7 +70,6 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
                clr_cmd_rdy,
                resp_data,
                send_resp,
-               resp_sent,
                ss,
                wrt_SPI,
                SPI_data,

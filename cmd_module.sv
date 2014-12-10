@@ -1,6 +1,6 @@
 `include "types.h"
 
-module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, resp_sent, ss, wrt_SPI, SPI_data, EEP_data, SPI_done,
+module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, ss, wrt_SPI, SPI_data, EEP_data, SPI_done,
                 // Extra ports
                start_dump, dump_channel, dump_data, send_dump, dump_finished, set_capture_done, trig_cfg, decimator, trig_pos);
 	
@@ -24,7 +24,6 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, r
 	output logic clr_cmd_rdy;
 	output logic[7:0] resp_data;
 	output logic send_resp;
-	input resp_sent;
 	//Connections to the SPI module and related logic
 	output SlaveSelect ss;
 	output logic wrt_SPI;
@@ -70,7 +69,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, r
         if(!rst_n)
             trig_cfg <= 0;
         else
-            trig_cfg <= nxt_trig_cfg;
+            trig_cfg <= {~set_capture_done & nxt_trig_cfg[5], nxt_trig_cfg[4:0]};
     end
 
     always_ff @(posedge clk, negedge rst_n) begin
