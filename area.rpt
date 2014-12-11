@@ -3,7 +3,7 @@
 Report : area
 Design : DSO_dig
 Version: I-2013.12-SP5
-Date   : Wed Dec 10 18:59:27 2014
+Date   : Wed Dec 10 19:14:41 2014
 ****************************************
 
 Library(s) Used:
@@ -19,12 +19,12 @@ Number of macros/black boxes:               0
 Number of buf/inv:                         10
 Number of references:                      14
 
-Combinational area:               1296.892817
-Buf/Inv area:                      148.705204
-Noncombinational area:             828.903606
+Combinational area:               1283.662817
+Buf/Inv area:                      148.528804
+Noncombinational area:             839.134803
 Macro/Black Box area:                0.000000
 Net Interconnect area:      undefined  (Wire load has zero net area)
 
-Total cell area:                  2125.796423
+Total cell area:                  2122.797620
 Total area:                 undefined
 1

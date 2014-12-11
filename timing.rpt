@@ -1,6 +1,6 @@
 Information: Updating design information... (UID-85)
 Information: Timing loop detected. (OPT-150)
-	comm/uart0/transmitter/U4/B1 comm/uart0/transmitter/U4/ZN core/capturer/U120/B1 core/capturer/U120/ZN core/capturer/U119/A1 core/capturer/U119/ZN core/capturer/U64/I core/capturer/U64/ZN core/cmdr/U52/I core/cmdr/U52/ZN core/cmdr/U103/A2 core/cmdr/U103/ZN 
+	comm/uart0/transmitter/U4/B1 comm/uart0/transmitter/U4/ZN core/capturer/U5/B1 core/capturer/U5/ZN core/capturer/U42/I core/capturer/U42/ZN core/cmdr/U44/I core/cmdr/U44/ZN core/cmdr/U97/A2 core/cmdr/U97/ZN 
 Warning: Disabling timing arc between pins 'B1' and 'ZN' on cell 'comm/uart0/transmitter/U4'
          to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'B1' and 'ZN' on cell 'comm/uart0/transmitter/U4'
@@ -15,7 +15,7 @@ Report : timing
         -max_paths 1
 Design : DSO_dig
 Version: I-2013.12-SP5
-Date   : Wed Dec 10 18:59:27 2014
+Date   : Wed Dec 10 19:14:41 2014
 ****************************************
 
 Operating Conditions: NCCOM   Library: tcbn40lpbwptc
@@ -81,7 +81,7 @@ Report : timing
         -max_paths 1
 Design : DSO_dig
 Version: I-2013.12-SP5
-Date   : Wed Dec 10 18:59:27 2014
+Date   : Wed Dec 10 19:14:41 2014
 ****************************************
 
 Operating Conditions: NCCOM   Library: tcbn40lpbwptc
@@ -125,66 +125,68 @@ Wire Load Model Mode: segmented
   --------------------------------------------------------------------------
   clock clk (rise edge)                                   0.00       0.00
   clock network delay (ideal)                             0.00       0.00
-  core/cmdr/dump_channel_reg[1]/CP (EDFCND1BWP)           0.00       0.00 r
-  core/cmdr/dump_channel_reg[1]/Q (EDFCND1BWP)            0.16       0.16 f
-  core/cmdr/dump_channel[1] (cmd_module)                  0.00       0.16 f
-  core/U12/ZN (INR2D1BWP)                                 0.09       0.25 r
-  core/U8/Z (AO222D1BWP)                                  0.09       0.34 r
-  core/cmdr/dump_data[0] (cmd_module)                     0.00       0.34 r
-  core/cmdr/correction/raw[0] (Correction)                0.00       0.34 r
-  core/cmdr/correction/add_14/A[0] (Correction_DW01_add_3)
+  core/cmdr/dump_channel_reg[1]/CP (EDFCND2BWP)           0.00       0.00 r
+  core/cmdr/dump_channel_reg[1]/Q (EDFCND2BWP)            0.14       0.14 f
+  core/cmdr/dump_channel[1] (cmd_module)                  0.00       0.14 f
+  core/U9/ZN (NR2D1BWP)                                   0.06       0.20 r
+  core/U11/ZN (CKND0BWP)                                  0.03       0.23 f
+  core/U12/ZN (INVD1BWP)                                  0.04       0.27 r
+  core/U6/Z (AO222D1BWP)                                  0.07       0.34 r
+  core/cmdr/dump_data[2] (cmd_module)                     0.00       0.34 r
+  core/cmdr/correction/raw[2] (Correction)                0.00       0.34 r
+  core/cmdr/correction/add_14/A[2] (Correction_DW01_add_3)
                                                           0.00       0.34 r
-  core/cmdr/correction/add_14/U31/Z (AN2XD1BWP)           0.05       0.38 r
-  core/cmdr/correction/add_14/U8/ZN (IOA21D2BWP)          0.05       0.44 r
-  core/cmdr/correction/add_14/U5/ZN (ND2D1BWP)            0.02       0.46 f
-  core/cmdr/correction/add_14/U4/ZN (ND2D1BWP)            0.03       0.49 r
-  core/cmdr/correction/add_14/U29/ZN (ND2D1BWP)           0.02       0.51 f
-  core/cmdr/correction/add_14/U6/ZN (ND2D1BWP)            0.02       0.54 r
-  core/cmdr/correction/add_14/U28/ZN (IOA21D1BWP)         0.06       0.60 r
-  core/cmdr/correction/add_14/U11/ZN (IOA21D2BWP)         0.06       0.65 r
-  core/cmdr/correction/add_14/U7/ZN (IOA21D2BWP)          0.05       0.71 r
+  core/cmdr/correction/add_14/U11/ZN (CKND2D1BWP)         0.03       0.38 f
+  core/cmdr/correction/add_14/U22/ZN (INR2D1BWP)          0.03       0.41 r
+  core/cmdr/correction/add_14/U25/ZN (NR2XD0BWP)          0.02       0.44 f
+  core/cmdr/correction/add_14/U23/ZN (ND2D1BWP)           0.03       0.46 r
+  core/cmdr/correction/add_14/U3/ZN (ND2D1BWP)            0.02       0.49 f
+  core/cmdr/correction/add_14/U29/ZN (ND2D1BWP)           0.02       0.51 r
+  core/cmdr/correction/add_14/U2/ZN (IOA21D1BWP)          0.06       0.57 r
+  core/cmdr/correction/add_14/U28/ZN (IOA21D1BWP)         0.06       0.63 r
+  core/cmdr/correction/add_14/U4/ZN (IOA21D1BWP)          0.06       0.69 r
   core/cmdr/correction/add_14/SUM[8] (Correction_DW01_add_3)
-                                                          0.00       0.71 r
-  core/cmdr/correction/U8/ZN (IND2D2BWP)                  0.04       0.75 r
-  core/cmdr/correction/U3/ZN (IOA21D1BWP)                 0.08       0.83 r
+                                                          0.00       0.69 r
+  core/cmdr/correction/U4/ZN (IND2D2BWP)                  0.05       0.74 r
+  core/cmdr/correction/U6/ZN (IOA21D2BWP)                 0.07       0.81 r
   core/cmdr/correction/mult_18/A[1] (Correction_DW02_mult_0)
-                                                          0.00       0.83 r
-  core/cmdr/correction/mult_18/U106/Z (AN2XD1BWP)         0.06       0.88 r
-  core/cmdr/correction/mult_18/U94/Z (AN2XD1BWP)          0.05       0.93 r
-  core/cmdr/correction/mult_18/S2_2_4/CO (FA1D0BWP)       0.12       1.05 r
-  core/cmdr/correction/mult_18/S2_3_4/CO (FA1D0BWP)       0.12       1.17 r
-  core/cmdr/correction/mult_18/S2_4_4/CO (FA1D0BWP)       0.12       1.30 r
-  core/cmdr/correction/mult_18/S2_5_4/CO (FA1D0BWP)       0.12       1.42 r
-  core/cmdr/correction/mult_18/S2_6_4/CO (FA1D0BWP)       0.12       1.54 r
-  core/cmdr/correction/mult_18/S4_4/S (FA1D0BWP)          0.14       1.68 r
-  core/cmdr/correction/mult_18/U37/Z (XOR2D1BWP)          0.08       1.76 f
+                                                          0.00       0.81 r
+  core/cmdr/correction/mult_18/U95/Z (AN2XD1BWP)          0.05       0.86 r
+  core/cmdr/correction/mult_18/U79/Z (AN2XD1BWP)          0.05       0.91 r
+  core/cmdr/correction/mult_18/S2_2_4/CO (FA1D0BWP)       0.12       1.03 r
+  core/cmdr/correction/mult_18/S2_3_4/CO (FA1D0BWP)       0.12       1.15 r
+  core/cmdr/correction/mult_18/S2_4_4/CO (FA1D0BWP)       0.12       1.27 r
+  core/cmdr/correction/mult_18/S2_5_4/CO (FA1D0BWP)       0.12       1.40 r
+  core/cmdr/correction/mult_18/S2_6_4/CO (FA1D0BWP)       0.12       1.52 r
+  core/cmdr/correction/mult_18/S4_4/S (FA1D0BWP)          0.14       1.66 r
+  core/cmdr/correction/mult_18/U35/Z (XOR2D1BWP)          0.08       1.74 f
   core/cmdr/correction/mult_18/FS_1/A[9] (Correction_DW01_add_2)
-                                                          0.00       1.76 f
-  core/cmdr/correction/mult_18/FS_1/U34/Z (OR2D1BWP)      0.06       1.82 f
-  core/cmdr/correction/mult_18/FS_1/U3/ZN (CKND1BWP)      0.02       1.84 r
-  core/cmdr/correction/mult_18/FS_1/U5/ZN (OAI21D1BWP)
-                                                          0.02       1.86 f
-  core/cmdr/correction/mult_18/FS_1/U6/ZN (ND2D1BWP)      0.03       1.89 r
-  core/cmdr/correction/mult_18/FS_1/U4/ZN (ND3D1BWP)      0.04       1.93 f
-  core/cmdr/correction/mult_18/FS_1/U2/Z (AO21D1BWP)      0.06       2.00 f
-  core/cmdr/correction/mult_18/FS_1/U32/ZN (ND2D1BWP)     0.02       2.02 r
-  core/cmdr/correction/mult_18/FS_1/U8/ZN (CKND2D2BWP)
-                                                          0.04       2.05 f
+                                                          0.00       1.74 f
+  core/cmdr/correction/mult_18/FS_1/U33/Z (OR2D1BWP)      0.06       1.80 f
+  core/cmdr/correction/mult_18/FS_1/U8/ZN (CKND1BWP)      0.02       1.82 r
+  core/cmdr/correction/mult_18/FS_1/U26/ZN (OAI21D1BWP)
+                                                          0.02       1.84 f
+  core/cmdr/correction/mult_18/FS_1/U29/ZN (ND2D1BWP)     0.03       1.87 r
+  core/cmdr/correction/mult_18/FS_1/U25/ZN (ND3D1BWP)     0.04       1.91 f
+  core/cmdr/correction/mult_18/FS_1/U15/Z (AO21D0BWP)     0.07       1.98 f
+  core/cmdr/correction/mult_18/FS_1/U6/ZN (ND2D1BWP)      0.02       2.01 r
+  core/cmdr/correction/mult_18/FS_1/U2/ZN (CKND2D2BWP)
+                                                          0.04       2.04 f
   core/cmdr/correction/mult_18/FS_1/SUM[13] (Correction_DW01_add_2)
-                                                          0.00       2.05 f
+                                                          0.00       2.04 f
   core/cmdr/correction/mult_18/PRODUCT[15] (Correction_DW02_mult_0)
-                                                          0.00       2.05 f
-  core/cmdr/correction/U18/Z (OR2D1BWP)                   0.06       2.11 f
-  core/cmdr/correction/corrected[3] (Correction)          0.00       2.11 f
-  core/cmdr/U17/Z (AO222D1BWP)                            0.10       2.21 f
-  core/cmdr/resp_data[3] (cmd_module)                     0.00       2.21 f
-  core/resp_data[3] (dig_core)                            0.00       2.21 f
-  comm/tx_data[3] (UART_comm)                             0.00       2.21 f
-  comm/uart0/tx_data[3] (UART)                            0.00       2.21 f
-  comm/uart0/transmitter/tx_data[3] (UART_tx)             0.00       2.21 f
-  comm/uart0/transmitter/U18/Z (AO222D1BWP)               0.12       2.33 f
-  comm/uart0/transmitter/data_reg[3]/D (DFQD1BWP)         0.00       2.33 f
-  data arrival time                                                  2.33
+                                                          0.00       2.04 f
+  core/cmdr/correction/U18/Z (OR2D1BWP)                   0.06       2.10 f
+  core/cmdr/correction/corrected[3] (Correction)          0.00       2.10 f
+  core/cmdr/U17/Z (AO222D1BWP)                            0.10       2.20 f
+  core/cmdr/resp_data[3] (cmd_module)                     0.00       2.20 f
+  core/resp_data[3] (dig_core)                            0.00       2.20 f
+  comm/tx_data[3] (UART_comm)                             0.00       2.20 f
+  comm/uart0/tx_data[3] (UART)                            0.00       2.20 f
+  comm/uart0/transmitter/tx_data[3] (UART_tx)             0.00       2.20 f
+  comm/uart0/transmitter/U18/Z (AO222D1BWP)               0.12       2.32 f
+  comm/uart0/transmitter/data_reg[3]/D (DFQD1BWP)         0.00       2.32 f
+  data arrival time                                                  2.32
 
   clock clk (rise edge)                                   2.50       2.50
   clock network delay (ideal)                             0.00       2.50
@@ -194,9 +196,9 @@ Wire Load Model Mode: segmented
   data required time                                                 2.34
   --------------------------------------------------------------------------
   data required time                                                 2.34
-  data arrival time                                                 -2.33
+  data arrival time                                                 -2.32
   --------------------------------------------------------------------------
-  slack (MET)                                                        0.01
+  slack (MET)                                                        0.02
 
 
 1

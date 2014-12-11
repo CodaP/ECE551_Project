@@ -57,7 +57,7 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
 
     always_ff @(posedge clk, negedge rst_n)
         if (!rst_n)
-            addr <= 0;
+            addr <= 0; // must reset to sync with trace_end
         else
             addr <= next_addr;
 
@@ -79,8 +79,11 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
         else
             armed <= next_armed;
 
-    always_ff @(posedge clk)
-        trace_end <= next_trace_end;
+    always_ff @(posedge clk, negedge rst_n)
+        if (!rst_n)
+            trace_end <= 0; // must reset to sync with addr
+        else
+            trace_end <= next_trace_end;
 
     always_comb begin
         next_trig_cnt = trig_cnt;
@@ -94,96 +97,92 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
         dump_finished = 0;
         we = 0;
         en = 0;
-        if (start_dump) begin
-            if (rclk) begin
-                nxt_state = DUMP_RNEG;
-                next_addr = trace_end;
-            end else begin
-                nxt_state = DUMP_RPOS_FIRST;
-                next_addr = trace_end;
-            end
-        end else begin
-            case(state)
-                CAP_START: begin
-                    nxt_state = CAP_START;
-                    if (!capture_done) begin
-                        if (|trig_type & ~rclk) begin
-                            nxt_state = SAMP_RPOS;
-                            next_trig_cnt = 0;
-                            next_smpl_cnt = 0; // TODO:[opt] having both trig_cnt and smpl_cnt is redundant
-                            next_dec_cnt = 0;
-                        end
-                    end
-                end
-                SAMP_RPOS: begin
-                    nxt_state = SAMP_RNEG;
-                    next_dec_cnt = dec_cnt + 1;
-                    next_addr = keep_ff ? addr + 1 : addr;
-                    we = keep_ff;
-                    en = keep_ff;
-                end
-                SAMP_RNEG: begin
-                    if(trig_cnt == trig_pos) begin
-                        nxt_state = CAP_START;
-                        set_capture_done = 1;
-                        next_trace_end = addr;
-                        next_armed = 0;
+        case(state)
+            CAP_START: begin
+                nxt_state = CAP_START;
+                if (start_dump) begin
+                    if (rclk) begin
+                        nxt_state = DUMP_RNEG;
                     end else begin
+                        nxt_state = DUMP_RPOS_FIRST;
+                    end
+                end else if (!capture_done) begin
+                    if (|trig_type & ~rclk) begin
                         nxt_state = SAMP_RPOS;
-                        en = keep;
-                        we = keep;
-                        if (keep) begin
-                            next_dec_cnt = 0;
-                            if (trigger || autoroll && armed) begin
-                                next_trig_cnt = trig_cnt + 1;
-                            end else begin
-                                next_smpl_cnt = smpl_cnt + 1;
-                                if (next_smpl_cnt + trig_pos == 10'h200)
-                                    next_armed = 1;
-                            end
+                        next_trig_cnt = 0;
+                        next_smpl_cnt = 0; // TODO:[opt] having both trig_cnt and smpl_cnt is redundant
+                        next_dec_cnt = 0;
+                    end
+                end
+            end
+            SAMP_RPOS: begin
+                nxt_state = SAMP_RNEG;
+                next_dec_cnt = dec_cnt + 1;
+                next_addr = keep_ff ? addr + 1 : addr;
+                we = keep_ff;
+                en = keep_ff;
+            end
+            SAMP_RNEG: begin
+                if(trig_cnt == trig_pos) begin
+                    nxt_state = CAP_START;
+                    set_capture_done = 1;
+                    next_trace_end = addr;
+                    next_armed = 0;
+                end else begin
+                    nxt_state = SAMP_RPOS;
+                    en = keep;
+                    we = keep;
+                    if (keep) begin
+                        next_dec_cnt = 0;
+                        if (trigger || autoroll && armed) begin
+                            next_trig_cnt = trig_cnt + 1;
+                        end else begin
+                            next_smpl_cnt = smpl_cnt + 1;
+                            if (next_smpl_cnt + trig_pos == 10'h200)
+                                next_armed = 1;
                         end
                     end
                 end
-                DUMP_RPOS_FIRST: begin
-                    nxt_state = DUMP_RNEG;
-                    en = 1;
-                end
-                DUMP_RPOS: begin
-                    nxt_state = DUMP_RNEG;
+            end
+            DUMP_RPOS_FIRST: begin
+                nxt_state = DUMP_RNEG;
+                en = 1;
+            end
+            DUMP_RPOS: begin
+                nxt_state = DUMP_RNEG;
+                next_addr = addr + 1;
+                en = 1;
+            end
+            DUMP_RNEG: begin
+                nxt_state = DUMP_SEND;
+                en = 1;
+            end
+            DUMP_SEND: begin
+                nxt_state = DUMP_WAIT;
+                send_dump = 1;
+                en = 1;
+            end
+            DUMP_WAIT: begin
+                en = 1;
+                if (dump_sent) begin
                     next_addr = addr + 1;
-                    en = 1;
-                end
-                DUMP_RNEG: begin
-                    nxt_state = DUMP_SEND;
-                    en = 1;
-                end
-                DUMP_SEND: begin
+                    if (next_addr == trace_end) begin
+                        nxt_state = CAP_START;
+                        dump_finished = 1;
+                    end else begin
+                        if (rclk) begin
+                            nxt_state = DUMP_RNEG;
+                        end else
+                            nxt_state = DUMP_RPOS;
+                    end
+                end else begin
                     nxt_state = DUMP_WAIT;
                     send_dump = 1;
-                    en = 1;
                 end
-                DUMP_WAIT: begin
-                    en = 1;
-                    if (dump_sent) begin
-                        next_addr = addr + 1;
-                        if (next_addr == trace_end) begin
-                            nxt_state = CAP_START;
-                            dump_finished = 1;
-                        end else begin
-                            if (rclk) begin
-                                nxt_state = DUMP_RNEG;
-                            end else
-                                nxt_state = DUMP_RPOS;
-                        end
-                    end else begin
-                        nxt_state = DUMP_WAIT;
-                        send_dump = 1;
-                    end
-                end
-                default:
-                    nxt_state = CAP_START;
-            endcase
-        end
+            end
+            default:
+                nxt_state = CAP_START;
+        endcase
     end
 endmodule
 
