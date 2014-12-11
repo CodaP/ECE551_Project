@@ -16,3 +16,4 @@ compile -map_effort medium
 report_timing -delay min > timing.rpt
 report_timing -delay max >> timing.rpt
 report_area > area.rpt
+write -format verilog DSO_dig -output netlist.vg
