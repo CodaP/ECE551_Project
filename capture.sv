@@ -7,8 +7,7 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
         start_dump, dump_sent,
         send_dump, dump_finished);
 
-    State state;
-    State nxt_state;
+    State state, nxt_state;
 
     input clk, rst_n; // Clock and active-low asynchronous reset
     input rclk; // The ram clock
@@ -20,7 +19,9 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
     output logic en; // Enable the ram
     output logic we; // Write the ram if enabled
     output Address addr; // The ram address to write to
+    Address next_addr; // The next value of the addr register
     output logic armed; // Is trigger armed?
+    logic next_armed; // The next value for the armed register
     output logic set_capture_done; // Should capture_done be set?
 
     input start_dump; // Whether a dump should begin
@@ -30,16 +31,12 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
 
     logic autoroll; // Whether the trigger is on autoroll
 
-    logic next_armed; // The next value for the armed register
     logic [15:0] dec_cnt, next_dec_cnt; // The decimator counter
-    logic keep; // Whether a value should be kept
-    logic keep_ff; // The preserved value of keep from last cycle
-    Address next_addr; // The next value of the addr register
-    Address trig_cnt, next_trig_cnt; // The trigger count
-    Address smpl_cnt, next_smpl_cnt; // The sample count
-    Address trace_end, next_trace_end; // The last sample to be captured
+    logic keep, keep_ff; // Whether a value should be kept, and its value from last clock
+    Address counter, next_counter;
 
     assign autoroll = trig_type[1];
+    assign keep = dec_cnt[dec_pwr];
 
     always_ff @(posedge clk, negedge rst_n)
         if(!rst_n)
@@ -52,8 +49,6 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
             keep_ff <= 1'b0;
         else
             keep_ff <= keep;
- 
-    assign keep = dec_cnt[dec_pwr];
 
     always_ff @(posedge clk, negedge rst_n)
         if (!rst_n)
@@ -67,11 +62,11 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
         else
             dec_cnt <= next_dec_cnt;
 
-    always_ff @(posedge clk)
-        trig_cnt <= next_trig_cnt;
-
-    always_ff @(posedge clk)
-        smpl_cnt <= next_smpl_cnt;
+    always_ff @(posedge clk, negedge rst_n)
+        if (!rst_n)
+            counter <= 0;
+        else
+            counter <= next_counter;
 
     always_ff @(posedge clk, negedge rst_n)
         if (!rst_n)
@@ -79,19 +74,11 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
         else
             armed <= next_armed;
 
-    always_ff @(posedge clk, negedge rst_n)
-        if (!rst_n)
-            trace_end <= 0; // must reset to sync with addr
-        else
-            trace_end <= next_trace_end;
-
     always_comb begin
-        next_trig_cnt = trig_cnt;
-        next_smpl_cnt = smpl_cnt;
+        next_counter = counter;
         next_addr = addr;
         next_dec_cnt = dec_cnt;
         next_armed = armed;
-        next_trace_end = trace_end;
         set_capture_done = 0;
         send_dump = 0;
         dump_finished = 0;
@@ -100,7 +87,9 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
         case(state)
             CAP_START: begin
                 nxt_state = CAP_START;
+                // counter is always 0 here
                 if (start_dump) begin
+                    next_counter = counter - 1;
                     if (rclk) begin
                         nxt_state = DUMP_RNEG;
                     end else begin
@@ -109,8 +98,7 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
                 end else if (!capture_done) begin
                     if (|trig_type & ~rclk) begin
                         nxt_state = SAMP_RPOS;
-                        next_trig_cnt = 0;
-                        next_smpl_cnt = 0; // TODO:[opt] having both trig_cnt and smpl_cnt is redundant
+                        next_counter = counter - 1;
                         next_dec_cnt = 0;
                     end
                 end
@@ -123,10 +111,9 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
                 en = keep_ff;
             end
             SAMP_RNEG: begin
-                if(trig_cnt == trig_pos) begin
+                if(counter == 0) begin
                     nxt_state = CAP_START;
                     set_capture_done = 1;
-                    next_trace_end = addr;
                     next_armed = 0;
                 end else begin
                     nxt_state = SAMP_RPOS;
@@ -135,11 +122,12 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
                     if (keep) begin
                         next_dec_cnt = 0;
                         if (trigger || autoroll && armed) begin
-                            next_trig_cnt = trig_cnt + 1;
+                            next_counter = counter - 1;
                         end else begin
-                            next_smpl_cnt = smpl_cnt + 1;
-                            if (next_smpl_cnt + trig_pos == 10'h200)
+                            if (counter == trig_pos)
                                 next_armed = 1;
+                            else
+                                next_counter = counter - 1;
                         end
                     end
                 end
@@ -166,10 +154,11 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
                 en = 1;
                 if (dump_sent) begin
                     next_addr = addr + 1;
-                    if (next_addr == trace_end) begin
+                    if (counter == 0) begin
                         nxt_state = CAP_START;
                         dump_finished = 1;
                     end else begin
+                        next_counter = counter - 1;
                         if (rclk) begin
                             nxt_state = DUMP_RNEG;
                         end else

@@ -10,7 +10,6 @@ set_load 0.1 [all_outputs]
 set_wire_load_model -name TSMC32K_Lowk_Conservative -library tcbn40lpbwptc
 set_max_transition 0.15 [current_design]
 set_clock_uncertainty 0.15 clk
-compile -map_effort medium
 set_fix_hold clk
 compile -map_effort medium
 report_timing -delay min > timing.rpt
