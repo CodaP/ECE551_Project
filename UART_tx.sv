@@ -17,10 +17,14 @@ module UART_tx(clk, rst_n, tx_data, trmt, TX, tx_done);
 	UART_tx_State state, next_state;
 
 	// State advancement
-	always_ff @(posedge clk) data_count <= next_data_count;
+	always_ff @(posedge clk, negedge rst_n)
+        if (!rst_n)
+            data_count <= 0;
+        else
+            data_count <= next_data_count;
 	always_ff @(posedge clk) baud_count <= next_baud_count;
 	always_ff @(posedge clk) data       <= next_data      ;
-	always_ff @(posedge clk or negedge rst_n) begin
+	always_ff @(posedge clk, negedge rst_n) begin
 		if (!rst_n)
 			state <= IDLE;
 		else

@@ -1,0 +1,40 @@
+read_file { DSO_dig.sv UART_comm.sv UART.sv UART_rx.sv UART_tx.sv SPIMaster.sv dig_core.sv cmd_module.sv capture.sv trigger.sv ClkGen.sv Correction.sv RAM512_shell.sv }
+
+# don't optimize away RAM512, or any connected signals
+set_dont_touch RAM512
+set_dont_touch addr
+
+# continue with compilation
+set current_design DSO_dig
+create_clock -name "clk" -period 2.5 -waveform { 0 1 } {clk}
+set_dont_touch_network [ find port clk ]
+set prim_inputs [remove_from_collection [all_inputs] [find port clk]]
+set_input_delay -clock clk 0.5 $prim_inputs
+set_output_delay -clock clk 0.5 [all_outputs]
+set_driving_cell -lib_cell ND2D2BWP -from_pin A1 -library tcbn40lpbwptc $prim_inputs
+set_load 0.1 [all_outputs]
+set_wire_load_model -name TSMC32K_Lowk_Conservative -library tcbn40lpbwptc
+set_max_transition 0.15 [current_design]
+set_clock_uncertainty 0.15 clk
+set_fix_hold clk
+compile_ultra
+report_timing -delay min > timing_ultra.rpt
+report_timing -delay max >> timing_ultra.rpt
+report_area > area_ultra.rpt
+write -format verilog DSO_dig -output synth_ultra/DSO_dig.vg
+write -format verilog UART_comm -output synth_ultra/UART_comm.vg
+write -format verilog UART -output synth_ultra/UART.vg
+write -format verilog UART_rx -output synth_ultra/UART_rx.vg
+write -format verilog UART_tx -output synth_ultra/UART_tx.vg
+write -format verilog SPIMaster -output synth_ultra/SPIMaster.vg
+write -format verilog dig_core -output synth_ultra/dig_core.vg
+write -format verilog cmd_module -output synth_ultra/cmd_module.vg
+write -format verilog Capture -output synth_ultra/Capture.vg
+write -format verilog Trigger -output synth_ultra/Trigger.vg
+write -format verilog DetectTrigger -output synth_ultra/DetectTrigger.vg
+write -format verilog TwoTrigger -output synth_ultra/TwoTrigger.vg
+write -format verilog DetectStableEdge -output synth_ultra/DetectStableEdge.vg
+write -format verilog Stabilize -output synth_ultra/Stabilize.vg
+write -format verilog Stabilize_RESET1 -output synth_ultra/Stabilize_RESET1.vg
+write -format verilog ClkGen -output synth_ultra/ClkGen.vg
+write -format verilog Correction -output synth_ultra/Correction.vg

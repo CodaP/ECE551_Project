@@ -61,6 +61,9 @@ UART iMSTR(.clk(clk), .rst_n(rst_n), .RX(TX), .TX(RX), .rx_data(resp_rcv), .trmt
 always @(posedge resp_rdy)
     $fdisplay(fd_out, "%h", resp_rcv);
 
+always @(posedge clk)
+    clr_resp_rdy <= resp_rdy;
+
 /////////////////////////////////////
 // Instantiate Calibration EEPROM //
 ///////////////////////////////////
@@ -71,7 +74,6 @@ initial begin
   rst_n = 0;			// assert reset
   fail = 0;
   send_cmd = 0;
-  clr_resp_rdy = 1;
   ///////////////////////////////
   // Your testing goes here!! //
   /////////////////////////////
@@ -83,7 +85,10 @@ initial begin
         DUMP_CH: begin
             $fdisplay(fd_out, "#Sending command %h (dump)",input_cmd);
             send_uart(input_cmd);
-            repeat(511) @(posedge resp_rdy);
+            repeat(511) begin
+                while(resp_rdy) @(posedge clk);
+                while(!resp_rdy) @(posedge clk);
+            end
             repeat(delay) begin
                 #1;
             end
@@ -105,8 +110,7 @@ end
 
 task send_uart(input reg [23:0] input_cmd);
     send_uart_no_resp(input_cmd);
-      if(!resp_rdy)
-          @(posedge resp_rdy);
+    while(!resp_rdy) @(posedge clk);
 endtask
 
 task send_uart_no_resp(input reg [23:0] input_cmd);
@@ -132,10 +136,7 @@ task send_uart_no_resp(input reg [23:0] input_cmd);
 
 endtask
 
-always
-  #1 clk = ~clk;
-			 
+always #1 clk = ~clk;
 
 endmodule
-			 
 			 
