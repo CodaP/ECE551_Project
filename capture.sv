@@ -1,4 +1,4 @@
-typedef enum logic [2:0] {CAP_START, SAMP_RPOS, SAMP_RNEG, DUMP_RNEG, DUMP_RPOS, DUMP_SEND, DUMP_WAIT} State;
+typedef enum logic [2:0] {CAP_START, SAMP_RPOS, SAMP_RNEG, DUMP_RNEG, DUMP_RPOS_FIRST, DUMP_RPOS, DUMP_SEND, DUMP_WAIT} State;
 typedef logic[8:0] Address;
 
 module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec_pwr,
@@ -97,9 +97,9 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
         if (start_dump) begin
             if (rclk) begin
                 nxt_state = DUMP_RNEG;
-                next_addr = trace_end + 1;
+                next_addr = trace_end;
             end else begin
-                nxt_state = DUMP_RPOS;
+                nxt_state = DUMP_RPOS_FIRST;
                 next_addr = trace_end;
             end
         end else begin
@@ -144,6 +144,10 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
                         end
                     end
                 end
+                DUMP_RPOS_FIRST: begin
+                    nxt_state = DUMP_RNEG;
+                    en = 1;
+                end
                 DUMP_RPOS: begin
                     nxt_state = DUMP_RNEG;
                     next_addr = addr + 1;
@@ -161,13 +165,13 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
                 DUMP_WAIT: begin
                     en = 1;
                     if (dump_sent) begin
-                        if (addr == trace_end) begin
+                        next_addr = addr + 1;
+                        if (next_addr == trace_end) begin
                             nxt_state = CAP_START;
                             dump_finished = 1;
                         end else begin
                             if (rclk) begin
                                 nxt_state = DUMP_RNEG;
-                                next_addr = addr + 1;
                             end else
                                 nxt_state = DUMP_RPOS;
                         end

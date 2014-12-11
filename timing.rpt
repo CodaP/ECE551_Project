@@ -1,6 +1,6 @@
 Information: Updating design information... (UID-85)
 Information: Timing loop detected. (OPT-150)
-	comm/uart0/transmitter/U4/B1 comm/uart0/transmitter/U4/ZN core/capturer/U85/A1 core/capturer/U85/ZN core/capturer/U53/A1 core/capturer/U53/ZN core/cmdr/U29/I core/cmdr/U29/ZN core/cmdr/U84/A2 core/cmdr/U84/ZN 
+	comm/uart0/transmitter/U4/B1 comm/uart0/transmitter/U4/ZN core/capturer/U120/B1 core/capturer/U120/ZN core/capturer/U119/A1 core/capturer/U119/ZN core/capturer/U64/I core/capturer/U64/ZN core/cmdr/U39/I core/cmdr/U39/ZN core/cmdr/U84/A2 core/cmdr/U84/ZN 
 Warning: Disabling timing arc between pins 'B1' and 'ZN' on cell 'comm/uart0/transmitter/U4'
          to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'B1' and 'ZN' on cell 'comm/uart0/transmitter/U4'
@@ -15,7 +15,7 @@ Report : timing
         -max_paths 1
 Design : DSO_dig
 Version: I-2013.12-SP5
-Date   : Wed Dec 10 18:03:22 2014
+Date   : Wed Dec 10 18:24:33 2014
 ****************************************
 
 Operating Conditions: NCCOM   Library: tcbn40lpbwptc
@@ -81,7 +81,7 @@ Report : timing
         -max_paths 1
 Design : DSO_dig
 Version: I-2013.12-SP5
-Date   : Wed Dec 10 18:03:22 2014
+Date   : Wed Dec 10 18:24:33 2014
 ****************************************
 
 Operating Conditions: NCCOM   Library: tcbn40lpbwptc
