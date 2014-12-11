@@ -1,6 +1,6 @@
 Information: Updating design information... (UID-85)
 Information: Timing loop detected. (OPT-150)
-	comm/uart0/transmitter/U4/B1 comm/uart0/transmitter/U4/ZN core/U16/A1 core/U16/ZN core/capturer/U96/I core/capturer/U96/ZN core/capturer/U56/A2 core/capturer/U56/ZN core/capturer/U49/A1 core/capturer/U49/ZN core/cmdr/U25/I core/cmdr/U25/ZN core/cmdr/U84/A2 core/cmdr/U84/ZN 
+	comm/uart0/transmitter/U4/B1 comm/uart0/transmitter/U4/ZN core/capturer/U85/A1 core/capturer/U85/ZN core/capturer/U53/A1 core/capturer/U53/ZN core/cmdr/U29/I core/cmdr/U29/ZN core/cmdr/U84/A2 core/cmdr/U84/ZN 
 Warning: Disabling timing arc between pins 'B1' and 'ZN' on cell 'comm/uart0/transmitter/U4'
          to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'B1' and 'ZN' on cell 'comm/uart0/transmitter/U4'
@@ -15,7 +15,7 @@ Report : timing
         -max_paths 1
 Design : DSO_dig
 Version: I-2013.12-SP5
-Date   : Wed Dec 10 16:47:34 2014
+Date   : Wed Dec 10 18:03:22 2014
 ****************************************
 
 Operating Conditions: NCCOM   Library: tcbn40lpbwptc
@@ -81,7 +81,7 @@ Report : timing
         -max_paths 1
 Design : DSO_dig
 Version: I-2013.12-SP5
-Date   : Wed Dec 10 16:47:34 2014
+Date   : Wed Dec 10 18:03:22 2014
 ****************************************
 
 Operating Conditions: NCCOM   Library: tcbn40lpbwptc
@@ -129,7 +129,7 @@ Wire Load Model Mode: segmented
   core/cmdr/dump_channel_reg[1]/Q (EDFCNQD4BWP)           0.14       0.14 r
   core/cmdr/dump_channel[1] (cmd_module)                  0.00       0.14 r
   core/U9/ZN (NR2D1BWP)                                   0.04       0.17 f
-  core/U8/Z (AO222D1BWP)                                  0.13       0.30 f
+  core/U5/Z (AO222D1BWP)                                  0.13       0.30 f
   core/cmdr/dump_data[3] (cmd_module)                     0.00       0.30 f
   core/cmdr/correction/raw[3] (Correction)                0.00       0.30 f
   core/cmdr/correction/add_14/A[3] (Correction_DW01_add_3)
