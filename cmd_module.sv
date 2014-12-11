@@ -129,7 +129,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
         if(!rst_n)
             trig_cfg <= 0;
         else
-            trig_cfg <= {~set_capture_done & nxt_trig_cfg[5], nxt_trig_cfg[4:0]};
+            trig_cfg <= {set_capture_done | nxt_trig_cfg[5], nxt_trig_cfg[4:0]};
     end
 
     always_ff @(posedge clk, negedge rst_n) begin
