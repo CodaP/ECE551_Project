@@ -116,19 +116,19 @@ task send_uart_no_resp(input reg [23:0] input_cmd);
   send_cmd = 1;
   @(negedge clk);
   send_cmd = 0;
-  @(posedge cmd_sent);
+  while(!cmd_sent) @(posedge clk);
   cmd_snd = input_cmd[15:8];
   @(negedge clk);
   send_cmd = 1;
   @(negedge clk);
   send_cmd = 0;
-  @(posedge cmd_sent);
+  while(!cmd_sent) @(posedge clk);
   cmd_snd = input_cmd[7:0];
   @(negedge clk);
   send_cmd = 1;
   @(negedge clk);
   send_cmd = 0;
-  @(posedge cmd_sent);
+  while(!cmd_sent) @(posedge clk);
 
 endtask
 

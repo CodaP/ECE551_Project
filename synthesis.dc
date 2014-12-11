@@ -16,4 +16,20 @@ compile -map_effort medium
 report_timing -delay min > timing.rpt
 report_timing -delay max >> timing.rpt
 report_area > area.rpt
-write -format verilog DSO_dig -output netlist.vg
+write -format verilog DSO_dig -output synth/DSO_dig.vg
+write -format verilog UART_comm -output synth/UART_comm.vg
+write -format verilog UART -output synth/UART.vg
+write -format verilog UART_rx -output synth/UART_rx.vg
+write -format verilog UART_tx -output synth/UART_tx.vg
+write -format verilog SPIMaster -output synth/SPIMaster.vg
+write -format verilog dig_core -output synth/dig_core.vg
+write -format verilog cmd_module -output synth/cmd_module.vg
+write -format verilog Capture -output synth/Capture.vg
+write -format verilog Trigger -output synth/Trigger.vg
+write -format verilog DetectTrigger -output synth/DetectTrigger.vg
+write -format verilog TwoTrigger -output synth/TwoTrigger.vg
+write -format verilog DetectStableEdge -output synth/DetectStableEdge.vg
+write -format verilog Stabilize -output synth/Stabilize.vg
+write -format verilog Stabilize_RESET1 -output synth/Stabilize_RESET1.vg
+write -format verilog ClkGen -output synth/ClkGen.vg
+write -format verilog Correction -output synth/Correction.vg

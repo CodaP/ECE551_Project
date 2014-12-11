@@ -15,7 +15,7 @@ Report : timing
         -max_paths 1
 Design : DSO_dig
 Version: I-2013.12-SP5
-Date   : Wed Dec 10 19:23:01 2014
+Date   : Wed Dec 10 22:50:38 2014
 ****************************************
 
 Operating Conditions: NCCOM   Library: tcbn40lpbwptc
@@ -81,7 +81,7 @@ Report : timing
         -max_paths 1
 Design : DSO_dig
 Version: I-2013.12-SP5
-Date   : Wed Dec 10 19:23:01 2014
+Date   : Wed Dec 10 22:50:38 2014
 ****************************************
 
 Operating Conditions: NCCOM   Library: tcbn40lpbwptc
