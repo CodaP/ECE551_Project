@@ -22,55 +22,58 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
 
 	input clk, rst_n;
 	//Connections to the UART command aggregator
-	input[23:0] cmd;
-	input cmd_rdy;
-	output logic clr_cmd_rdy;
-	output logic[7:0] resp_data;
-	output logic send_resp;
+	input[23:0] cmd; //Received data
+	input cmd_rdy; // data was received and is in cmd
+	output logic clr_cmd_rdy; // Done reading cmd
+	output logic[7:0] resp_data; // Data to transmit
+	output logic send_resp; // Transmit resp_data
 	//Connections to the SPI module and related logic
-	output SlaveSelect ss;
-	output logic wrt_SPI;
-	output logic[15:0] SPI_data;
-	input[7:0] EEP_data;
-	input SPI_done;
+	output SlaveSelect ss; // Which slave spi devices to connect
+	output logic wrt_SPI; // initiate a SPI transaction
+	output logic[15:0] SPI_data; // Data to transmit via SPI
+	input[7:0] EEP_data; // Response data from slave
+	input SPI_done; // EEP_data is ready to read
 
     //Extra ports
-    output logic start_dump; // output to Capture
-    output logic [1:0] dump_channel; // output to Capture
-    logic [1:0] nxt_dump_channel;
-    input [7:0] dump_data; // input [7:0] from Capture
-    input send_dump; // input from Capture
-    input dump_finished; // input from Capture
-    input set_capture_done; // input from Capture for trigger
+    output logic start_dump; // output to Capture, start the dump
+    output logic [1:0] dump_channel; // output to RAM mux in dig_core
+    logic [1:0] nxt_dump_channel; // next value of dump_channel
+    input [7:0] dump_data; // line in from RAM mux in dig_core
+    input send_dump; // Signal from capture that memory is set to next sample
+    input dump_finished; // Signal from capture that the dump is complete
+    input set_capture_done; // signal from capture that capture is done
     // Trigger options for help triggering
-    output logic [5:0] trig_cfg; // output [5:0] to trigger
+    output logic [5:0] trig_cfg; // configuration register for trigger
     logic [5:0] nxt_trig_cfg;
-    output logic [3:0] decimator;
+    output logic [3:0] decimator; // decimator register
     logic [3:0] nxt_decimator;
-    output logic [8:0] trig_pos;
+    output logic [8:0] trig_pos; // Trig_pos register
     logic [8:0] nxt_trig_pos;
 
-    logic [2:0] ch1_ggg;
-    logic [2:0] nxt_ch1_ggg;
-    logic [2:0] ch2_ggg;
+    logic [2:0] ch1_ggg; // cached ch1 AFE gain setting
+    logic [2:0] nxt_ch1_ggg; 
+    logic [2:0] ch2_ggg; // cached ch2 AFE gain setting
     logic [2:0] nxt_ch2_ggg;
-    logic [2:0] ch3_ggg;
+    logic [2:0] ch3_ggg; // cached ch3 AFE gain setting
     logic [2:0] nxt_ch3_ggg;
 
-    logic signed [7:0] offset;
+    logic signed [7:0] offset; // register storing offet component of correction
     logic signed [7:0] nxt_offset;
-    logic [7:0] gain;
+    logic [7:0] gain; // register storing gain component of correction
     logic [7:0] nxt_gain;
 
-    logic [7:0] corrected;
+    logic [7:0] corrected; // corrected dump_data
 
+    // Correction module
     Correction correction(dump_data,offset,gain,corrected);
 
+    // enumeration of cmd_module states
     typedef enum logic [3:0] { DISPATCH_CMD, WRT_EEP, RD_EEP_0, RD_EEP_1, RD_EEP_2, DUMP_STATE, DUMP_TX_OFFSET_REQUEST, DUMP_STALL_OFFSET, DUMP_TX_GAIN_REQUEST, DUMP_STALL_GAIN, DUMP_TX_GARBAGE_REQUEST } State;
 
     State state;
     State nxt_state;
 
+    // Offset flop
     always_ff @(posedge clk, negedge rst_n) begin
         if(!rst_n)
             offset <= 0;
@@ -78,6 +81,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
             offset <= nxt_offset;
     end
 
+    // Gain flop
     always_ff @(posedge clk, negedge rst_n) begin
         if(!rst_n)
             gain <= 0;
@@ -85,6 +89,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
             gain <= nxt_gain;
     end
 
+    // dump_channel flop
     always_ff @(posedge clk, negedge rst_n) begin
         if(!rst_n)
             dump_channel <= 0;
@@ -93,6 +98,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
     end
 
 
+    // State flop
     always_ff @(posedge clk, negedge rst_n) begin
         if(!rst_n)
             state <= DISPATCH_CMD;
@@ -100,6 +106,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
             state <= nxt_state;
     end
 
+    // Ch1 AFE gain flop
     always_ff @(posedge clk, negedge rst_n) begin
         if(!rst_n)
             ch1_ggg <= 0;
@@ -107,6 +114,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
             ch1_ggg <= nxt_ch1_ggg;
     end
 
+    // Ch2 AFE gain flop
     always_ff @(posedge clk, negedge rst_n) begin
         if(!rst_n)
             ch2_ggg <= 0;
@@ -114,6 +122,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
             ch2_ggg <= nxt_ch2_ggg;
     end
 
+    // Ch3 AFE gain flop
     always_ff @(posedge clk, negedge rst_n) begin
         if(!rst_n)
             ch3_ggg <= 0;
@@ -121,6 +130,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
             ch3_ggg <= nxt_ch3_ggg;
     end
 
+    // decimator flop
     always_ff @(posedge clk, negedge rst_n) begin
         if(!rst_n)
             decimator <= 0;
@@ -128,13 +138,16 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
             decimator <= nxt_decimator;
     end
 
+    // trig_cfg flop
     always_ff @(posedge clk, negedge rst_n) begin
         if(!rst_n)
             trig_cfg <= 0;
+        // capture_done bit has a synchronous preset
         else
             trig_cfg <= {set_capture_done | nxt_trig_cfg[5], nxt_trig_cfg[4:0]};
     end
 
+    // trig_pos flop
     always_ff @(posedge clk, negedge rst_n) begin
         if(!rst_n)
             trig_pos <= 0;
@@ -143,6 +156,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
     end
 
     always_comb begin
+        // Combination signal defaults
         clr_cmd_rdy = 0;
         resp_data = 8'hxx;
         send_resp = 0;
@@ -165,9 +179,13 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
             DISPATCH_CMD:
                 if(cmd_rdy) begin
                     clr_cmd_rdy = 1;
+                    // Only need to switch on the Opcode portion of cmd
                     case(cmd[19:16])
+                        // Initiate a dump
                         DUMP: begin
+                            // First we will read offset and gain from EEPROM
                             nxt_state = DUMP_TX_OFFSET_REQUEST;
+                            // Configure channel
                             nxt_dump_channel = cmd[9:8];
                             wrt_SPI = 1;
                             ss = SS_EEPROM;
@@ -180,26 +198,34 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
                                 SPI_data = {2'b00, nxt_dump_channel, ch3_ggg, 1'b0, 8'hxx};
                         end
                         SET_TRIGPOS: begin
+                            // Load a new trig_pos
                             nxt_trig_pos = cmd[8:0];
+                            // Send ACK
                             resp_data = ACK;
                             send_resp = 1;
                         end
                         SET_DEC: begin
+                            // Load a new decimator
                             nxt_decimator = cmd[3:0];
+                            // Send ACK
                             resp_data = ACK;
                             send_resp = 1;
                         end
                         SET_TRIG_CFG: begin
+                            // Load a new trig_cfg
                             nxt_trig_cfg = cmd[13:8];
+                            // Send ACK
                             resp_data = ACK;
                             send_resp = 1;
                         end
                         READ_TRIG_CFG: begin
+                            // Transmit trig_cfg
                             resp_data = trig_cfg;
                             send_resp = 1;
                         end
 
                         CONFIG_GAIN:begin
+                            // Send a SPI write to digital potentiometer
                             nxt_state = WRT_EEP;
                             wrt_SPI = 1;
 
@@ -237,12 +263,14 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
 
                         end
                         SET_TRIGGER:begin
+                            // Configure the trigger over SPI
                             nxt_state = WRT_EEP;
                             SPI_data = {8'h13,cmd[7:0]};
                             ss = SS_TRIGGER;
                             wrt_SPI = 1;
                         end
                         WRITE_EEPROM:begin
+                            // Write to an address in EEPROM
                             nxt_state = WRT_EEP;
                             wrt_SPI = 1;
                             ss = SS_EEPROM;
@@ -250,6 +278,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
                             SPI_data = {2'b01, cmd[13:0]};
                         end
                         READ_EEPROM:begin
+                            // Read from an address in EEPROM
                             nxt_state = RD_EEP_0;
                             wrt_SPI = 1;
                             ss = SS_EEPROM;
@@ -257,13 +286,16 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
                             SPI_data = {2'b00, cmd[13:8],8'hxx};
                         end
                         default: begin
+                            // Unused command
                             nxt_state = DISPATCH_CMD;
+                            // Send NACK
                             resp_data = NACK;
                             send_resp = 1;
                         end
                     endcase
                 end
                 else
+                    // Wait for cmd_rdy
                     nxt_state = DISPATCH_CMD;
             // Write to EEPROM
             WRT_EEP:begin
@@ -276,9 +308,11 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
                     nxt_state = WRT_EEP;
             end
 
-            // Read from EEPROM
+            // Read garbage from EEPROM
             RD_EEP_0:begin
                 if(SPI_done) begin
+                    // When done waiting send a bogus transaction to nobody
+                    // Used to wait for EEPROM to read
                     nxt_state = RD_EEP_1;
                     wrt_SPI = 1;
                     ss = SS_NONE;
@@ -286,11 +320,13 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
                 end
                 else
                     nxt_state = RD_EEP_0;
-
             end
 
+            // Stall during a phony transaction used for timing
             RD_EEP_1:begin
                 if(SPI_done) begin
+                    // When done issue another bogus read
+                    // This time to the EEPROM
                     nxt_state = RD_EEP_2;
                     wrt_SPI = 1;
                     ss = SS_EEPROM;
@@ -300,9 +336,10 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
 
             end
 
-            // Read from EEPROM
+            // Read data from EEPROM while bogus read goes out
             RD_EEP_2:begin
                 if(SPI_done) begin
+                    // When done set UART response to received data
                     nxt_state = DISPATCH_CMD;
                     resp_data = EEP_data;
                     send_resp = 1;
@@ -310,18 +347,22 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
                 else
                     nxt_state = RD_EEP_2;
             end
+            // Wait for request to EEPROM for offset to complete
             DUMP_TX_OFFSET_REQUEST: begin
                 nxt_state = DUMP_TX_OFFSET_REQUEST;
                 if(SPI_done) begin
+                    // When done waiting issue a phony request to nobody
                     wrt_SPI = 1;
                     nxt_state = DUMP_STALL_OFFSET;
                     ss = SS_NONE;
                 end
             end
 
+            // Wait for phony request to complete
             DUMP_STALL_OFFSET: begin
                 nxt_state = DUMP_STALL_OFFSET;
                 if(SPI_done) begin
+                    // When completed start a request for gain
                     wrt_SPI = 1;
                     nxt_state = DUMP_TX_GAIN_REQUEST;
                     ss = SS_EEPROM;
@@ -333,42 +374,55 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
                         SPI_data = {2'b00, dump_channel, ch3_ggg, 1'b1, 8'hxx};
                 end
             end
+            // Wait for gain request to complete. Also receive offset data
+            // from before
             DUMP_TX_GAIN_REQUEST: begin
                 nxt_state = DUMP_TX_GAIN_REQUEST;
                 if(SPI_done) begin
+                    // When finished we have the offset data
+                    // Kickoff another stall
                     wrt_SPI = 1;
                     ss = SS_NONE;
                     nxt_state = DUMP_STALL_GAIN;
                     nxt_offset = EEP_data;
                 end
             end
+            // Wait for bogus request to complete
             DUMP_STALL_GAIN: begin
                 nxt_state = DUMP_STALL_GAIN;
                 if(SPI_done) begin
+                    // Start a garbage request
                     wrt_SPI = 1;
                     ss = SS_EEPROM;
                     nxt_state = DUMP_TX_GARBAGE_REQUEST;
                 end
             end
+            // Wait for garbage reqeust to complete before grabbing the gain
+            // data the came in during it.
             DUMP_TX_GARBAGE_REQUEST: begin
                 nxt_state = DUMP_TX_GARBAGE_REQUEST;
                 if(SPI_done) begin
+                    // When done set the gain and begin dump
                     nxt_state = DUMP_STATE;
                     nxt_gain = EEP_data;
                     start_dump = 1;
                 end
             end
+            // Let capture do it's thing
+            // We send when it tells us to send
             DUMP_STATE:begin
-                // Need Flow control with the UART
                 if(send_dump) begin
+                    // Send corrected sample
                     resp_data = corrected;
                     send_resp = 1;
                     nxt_state = DUMP_STATE;
                 end
                 else if(dump_finished) begin
+                    // Finish dump
                     nxt_state = DISPATCH_CMD;
                 end
                 else begin
+                    // Wait for send_dump or dump_finished
                     nxt_state = DUMP_STATE;
                 end
 
