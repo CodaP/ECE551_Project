@@ -31,14 +31,17 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
  
     // cmd_module <-> Capture interconnects
     logic start_dump;
-    logic [1:0] dump_channel;
-    logic [7:0] dump_data;
     logic send_dump;
     logic dump_finished;
     logic set_capture_done;
     logic [3:0] decimator;
     logic [8:0] trig_pos;
 
+    // ram mux <-> cmd_module
+    logic [1:0] dump_channel;
+    logic [7:0] dump_data;
+
+    // RAM Mux
     assign dump_data = (dump_channel == 0) ? ch1_rdata:
                        (dump_channel == 1) ? ch2_rdata:
                                              ch3_rdata;
@@ -71,15 +74,18 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
         .clk(clk),
         .rst_n(rst_n),
         .rclk(rclk),
+        // Triggering
+        .armed(armed),
         .trigger(trigger),
         .trig_type(trig_cfg[3:2]),
         .trig_pos(trig_pos),
         .capture_done(trig_cfg[5]),
         .dec_pwr(decimator),
+        // RAMing
         .en(en),
         .we(we),
         .addr(addr),
-        .armed(armed),
+        // Dumping
         .set_capture_done(set_capture_done),
         .start_dump(start_dump),
         .dump_sent(resp_sent),
@@ -90,11 +96,13 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
     cmd_module cmdr(
         .clk(clk),
         .rst_n(rst_n),
+        // UARTing
         .cmd(cmd),
         .cmd_rdy(cmd_rdy),
         .clr_cmd_rdy(clr_cmd_rdy),
         .resp_data(resp_data),
         .send_resp(send_resp),
+        // SPIing
         .ss(ss),
         .wrt_SPI(wrt_SPI),
         .SPI_data(SPI_data),
@@ -102,8 +110,8 @@ module dig_core(clk,rst_n,adc_clk,trig1,trig2,SPI_data,wrt_SPI,SPI_done,ss,EEP_d
         .SPI_done(SPI_done),
         //Dumping
         .start_dump(start_dump), // output to Capture
-        .dump_channel(dump_channel), // output [1:0] to Capture
-        .dump_data(dump_data), // input [7:0] from Capture
+        .dump_channel(dump_channel), // output to RAM mux
+        .dump_data(dump_data), // input from RAM mux
         .send_dump(send_dump), // input from Capture
         .dump_finished(dump_finished), // input from Capture
         //Triggering
