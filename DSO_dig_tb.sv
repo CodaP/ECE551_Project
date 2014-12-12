@@ -58,9 +58,11 @@ AFE_A2D iAFE(.clk(clk),.rst_n(rst_n),.adc_clk(adc_clk),.ch1_ss_n(ch1_ss_n),.ch2_
 UART iMSTR(.clk(clk), .rst_n(rst_n), .RX(TX), .TX(RX), .rx_data(resp_rcv), .trmt(send_cmd),
                      .tx_done(cmd_sent), .rdy(resp_rdy), .tx_data(cmd_snd), .clr_rdy(clr_resp_rdy));
 
+// Output all uart output to uart_data
 always @(posedge resp_rdy)
     $fdisplay(fd_out, "%h", resp_rcv);
 
+// Always reset resp_rdy
 always @(posedge clk)
     clr_resp_rdy <= resp_rdy;
 
@@ -77,25 +79,37 @@ initial begin
   ///////////////////////////////
   // Your testing goes here!! //
   /////////////////////////////
+
+  // Reset everything
   repeat(10) @(negedge clk);
   rst_n = 1;
 
+  // Read in uart_commands
+  // For each line in it, parse a command and delay
   while($fscanf(fd_in, "%h %h", input_cmd, delay) > 0) begin
+      // Decode the opcode
       casex(input_cmd[23:16])
+        // If the command is dump we have to wait for a dump to complete
+        // before sending the next command
         DUMP_CH: begin
+            // Output what we are doing to a uart_data file
             $fdisplay(fd_out, "#Sending command %h (dump)",input_cmd);
+            // Dump the data
             send_uart(input_cmd);
             repeat(511) begin
                 while(resp_rdy) @(posedge clk);
                 while(!resp_rdy) @(posedge clk);
             end
+            // Delay for delay ns
             repeat(delay) begin
                 #1;
             end
         end
         default: begin
+            // Output what we are doing to a uart_data file
             $fdisplay(fd_out, "#Sending command %h",input_cmd);
             send_uart(input_cmd);
+            // Delay by delay
             repeat(delay) begin
                 #1;
             end
@@ -108,11 +122,13 @@ initial begin
 
 end
 
+// Use a 1 byte UART to send 3 bytes return after the last byte has finished
 task send_uart(input reg [23:0] input_cmd);
     send_uart_no_resp(input_cmd);
     while(!resp_rdy) @(posedge clk);
 endtask
 
+// Use a 1 byte UART to send 3 bytes, don't wait for the last byte to finish
 task send_uart_no_resp(input reg [23:0] input_cmd);
 
   cmd_snd = input_cmd[23:16];
