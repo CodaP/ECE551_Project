@@ -52,7 +52,7 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
 
     always_ff @(posedge clk, negedge rst_n)
         if (!rst_n)
-            addr <= 0; // must reset to sync with trace_end
+            addr <= 0;
         else
             addr <= next_addr;
 
@@ -111,7 +111,7 @@ module Capture(clk, rst_n, rclk, trigger, trig_type, trig_pos, capture_done, dec
                 en = keep_ff;
             end
             SAMP_RNEG: begin
-                if(counter == 0) begin
+                if(counter == 0 && (trigger || autoroll && armed)) begin
                     nxt_state = CAP_START;
                     set_capture_done = 1;
                     next_armed = 0;

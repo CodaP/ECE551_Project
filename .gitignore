@@ -1,9 +1,16 @@
 work/
 work.old/
+.nfs*
+*.pdf
 *.mpf
 *.wlf
 .*.swp
 *.svf
 *.mti
+*.do
+synth/
+synth_ultra/
 transcript
 filenames.log
+uart_data.txt
+alib-52/

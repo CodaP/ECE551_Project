@@ -66,14 +66,15 @@ module capture_tb;
         rst_n = 0;
         trigger = 0;
         dec_pwr = 2;
-        trig_type = 1;
-        trig_pos = 100;
+        trig_type = 2;
+        trig_pos = 20;
         capture_done = 0;
 
         start_dump = 0;
 
         @(negedge clk) rst_n = 1;
         while(!armed) @(posedge clk);
+        repeat(16) @(posedge clk);
         trigger = 1;
         while(!capture_done) @(posedge clk);
         trigger = 0;
