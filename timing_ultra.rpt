@@ -1,6 +1,6 @@
 Information: Updating design information... (UID-85)
 Information: Timing loop detected. (OPT-150)
-	comm/U108/B2 comm/U108/ZN core/U182/I core/U182/ZN core/U541/A2 core/U541/ZN core/U598/A2 core/U598/ZN comm/U63/I comm/U63/ZN 
+	comm/U108/B2 comm/U108/ZN core/U206/I core/U206/ZN core/U207/A2 core/U207/ZN core/U602/A1 core/U602/ZN comm/U84/I comm/U84/ZN 
 Warning: Disabling timing arc between pins 'B2' and 'ZN' on cell 'comm/U108'
          to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'B2' and 'ZN' on cell 'comm/U108'
@@ -15,15 +15,15 @@ Report : timing
         -max_paths 1
 Design : DSO_dig
 Version: I-2013.12-SP5
-Date   : Thu Dec 11 19:32:20 2014
+Date   : Thu Dec 11 19:44:00 2014
 ****************************************
 
 Operating Conditions: NCCOM   Library: tcbn40lpbwptc
 Wire Load Model Mode: segmented
 
-  Startpoint: comm/uart0/receiver/rx_data_reg[7]
+  Startpoint: comm/uart0/receiver/rx_data_reg[0]
               (rising edge-triggered flip-flop clocked by clk)
-  Endpoint: core/cmdr/trig_pos_reg[7]
+  Endpoint: comm/middle_byte_reg[0]
             (rising edge-triggered flip-flop clocked by clk)
   Path Group: clk
   Path Type: min
@@ -40,18 +40,17 @@ Wire Load Model Mode: segmented
   --------------------------------------------------------------------------
   clock clk (rise edge)                                   0.00       0.00
   clock network delay (ideal)                             0.00       0.00
-  comm/uart0/receiver/rx_data_reg[7]/CP (DFQD1BWP)        0.00       0.00 r
-  comm/uart0/receiver/rx_data_reg[7]/Q (DFQD1BWP)         0.12       0.12 f
-  comm/cmd[7] (UART_comm)                                 0.00       0.12 f
-  core/cmd[7] (dig_core)                                  0.00       0.12 f
-  core/U211/Z (MUX2D1BWP)                                 0.06       0.18 f
-  core/cmdr/trig_pos_reg[7]/D (DFCNQD1BWP)                0.00       0.18 f
+  comm/uart0/receiver/rx_data_reg[0]/CP (DFQD1BWP)        0.00       0.00 r
+  comm/uart0/receiver/rx_data_reg[0]/Q (DFQD1BWP)         0.12       0.12 f
+  comm/U81/ZN (INVD1BWP)                                  0.02       0.14 r
+  comm/U110/ZN (MAOI22D0BWP)                              0.03       0.18 f
+  comm/middle_byte_reg[0]/D (DFCNQD1BWP)                  0.00       0.18 f
   data arrival time                                                  0.18
 
   clock clk (rise edge)                                   0.00       0.00
   clock network delay (ideal)                             0.00       0.00
   clock uncertainty                                       0.15       0.15
-  core/cmdr/trig_pos_reg[7]/CP (DFCNQD1BWP)               0.00       0.15 r
+  comm/middle_byte_reg[0]/CP (DFCNQD1BWP)                 0.00       0.15 r
   library hold time                                       0.03       0.18
   data required time                                                 0.18
   --------------------------------------------------------------------------
@@ -70,7 +69,7 @@ Report : timing
         -max_paths 1
 Design : DSO_dig
 Version: I-2013.12-SP5
-Date   : Thu Dec 11 19:32:20 2014
+Date   : Thu Dec 11 19:44:00 2014
 ****************************************
 
 Operating Conditions: NCCOM   Library: tcbn40lpbwptc
@@ -78,7 +77,7 @@ Wire Load Model Mode: segmented
 
   Startpoint: core/cmdr/dump_channel_reg[1]
               (rising edge-triggered flip-flop clocked by clk)
-  Endpoint: comm/uart0/transmitter/data_reg[0]
+  Endpoint: comm/uart0/transmitter/data_reg[2]
             (rising edge-triggered flip-flop clocked by clk)
   Path Group: clk
   Path Type: max
@@ -95,47 +94,49 @@ Wire Load Model Mode: segmented
   --------------------------------------------------------------------------
   clock clk (rise edge)                                   0.00       0.00
   clock network delay (ideal)                             0.00       0.00
-  core/cmdr/dump_channel_reg[1]/CP (DFCNQD4BWP)           0.00       0.00 r
-  core/cmdr/dump_channel_reg[1]/Q (DFCNQD4BWP)            0.16       0.16 r
-  core/U85/ZN (NR2D4BWP)                                  0.02       0.19 f
-  core/U257/Z (AO222D1BWP)                                0.12       0.31 f
-  core/U265/CO (FA1D1BWP)                                 0.13       0.44 f
-  core/U329/CO (FA1D1BWP)                                 0.06       0.50 f
-  core/U309/CO (FA1D1BWP)                                 0.06       0.57 f
-  core/U325/CO (FA1D1BWP)                                 0.06       0.63 f
-  core/U269/CO (FA1D1BWP)                                 0.06       0.70 f
-  core/U306/CO (FA1D1BWP)                                 0.06       0.76 f
-  core/U343/CO (FA1D1BWP)                                 0.06       0.82 f
-  core/U62/ZN (IND2D2BWP)                                 0.05       0.88 f
-  core/U266/ZN (IOA21D1BWP)                               0.06       0.93 f
-  core/U24/ZN (INVD1BWP)                                  0.04       0.98 r
-  core/U303/ZN (NR2D1BWP)                                 0.03       1.01 f
-  core/U26/S (HA1D0BWP)                                   0.07       1.08 r
-  core/mult_x_90/U30/S (CMPE42D1BWP)                      0.18       1.26 r
-  core/mult_x_90/U29/S (CMPE42D1BWP)                      0.19       1.46 f
-  core/U500/CO (FA1D1BWP)                                 0.14       1.59 f
-  core/U61/ZN (ND2D1BWP)                                  0.03       1.62 r
-  core/U503/ZN (ND3D2BWP)                                 0.04       1.65 f
-  core/U592/CO (FA1D1BWP)                                 0.07       1.72 f
-  core/U580/CO (FA1D2BWP)                                 0.07       1.79 f
-  core/U504/ZN (ND2D1BWP)                                 0.03       1.82 r
-  core/U508/ZN (ND3D2BWP)                                 0.03       1.85 f
-  core/U588/CO (FA1D1BWP)                                 0.07       1.92 f
-  core/U533/CO (FA1D1BWP)                                 0.06       1.98 f
-  core/U536/CO (FA1D1BWP)                                 0.07       2.05 f
-  core/U83/ZN (ND2D3BWP)                                  0.03       2.07 r
-  core/U511/Z (OA211D4BWP)                                0.08       2.15 r
-  core/U514/ZN (OAI211D2BWP)                              0.04       2.20 f
-  core/resp_data[0] (dig_core)                            0.00       2.20 f
-  comm/tx_data[0] (UART_comm)                             0.00       2.20 f
-  comm/U151/Z (AO222D1BWP)                                0.14       2.33 f
-  comm/uart0/transmitter/data_reg[0]/D (DFQD1BWP)         0.00       2.33 f
+  core/cmdr/dump_channel_reg[1]/CP (DFCNQD1BWP)           0.00       0.00 r
+  core/cmdr/dump_channel_reg[1]/Q (DFCNQD1BWP)            0.17       0.17 r
+  core/U146/ZN (NR2D3BWP)                                 0.03       0.20 f
+  core/U154/Z (AO222D1BWP)                                0.14       0.35 f
+  core/U251/CO (HA1D1BWP)                                 0.04       0.39 f
+  core/U255/CO (FA1D1BWP)                                 0.06       0.45 f
+  core/U260/CO (FA1D1BWP)                                 0.06       0.51 f
+  core/U174/CO (FA1D1BWP)                                 0.06       0.58 f
+  core/U26/ZN (INVD1BWP)                                  0.02       0.60 r
+  core/U158/ZN (OAI21D1BWP)                               0.02       0.62 f
+  core/U168/CO (FA1D1BWP)                                 0.07       0.69 f
+  core/U178/CO (FA1D1BWP)                                 0.06       0.75 f
+  core/U245/CO (FA1D2BWP)                                 0.07       0.82 f
+  core/U159/ZN (CKND2BWP)                                 0.02       0.84 r
+  core/U160/ZN (CKND2D3BWP)                               0.02       0.87 f
+  core/U256/ZN (IOA21D1BWP)                               0.05       0.92 f
+  core/U257/ZN (CKND1BWP)                                 0.04       0.96 r
+  core/U438/ZN (NR2D1BWP)                                 0.03       0.99 f
+  core/U29/S (HA1D0BWP)                                   0.07       1.07 r
+  core/mult_x_91/U30/S (CMPE42D1BWP)                      0.18       1.25 r
+  core/mult_x_91/U29/S (CMPE42D1BWP)                      0.19       1.44 f
+  core/U586/CO (FA1D1BWP)                                 0.13       1.57 f
+  core/U589/CO (FA1D1BWP)                                 0.06       1.63 f
+  core/U620/CO (FA1D1BWP)                                 0.06       1.70 f
+  core/U593/CO (FA1D1BWP)                                 0.06       1.76 f
+  core/U582/CO (FA1D1BWP)                                 0.07       1.83 f
+  core/U282/ZN (IND2D1BWP)                                0.02       1.85 r
+  core/U284/ZN (ND3D1BWP)                                 0.04       1.89 f
+  core/U293/CO (FA1D1BWP)                                 0.07       1.96 f
+  core/U287/CO (FA1D1BWP)                                 0.07       2.03 f
+  core/U285/ZN (OAI211D2BWP)                              0.04       2.07 r
+  core/U286/ZN (IOA21D2BWP)                               0.03       2.10 f
+  core/U622/Z (AO211D1BWP)                                0.10       2.20 f
+  core/resp_data[2] (dig_core)                            0.00       2.20 f
+  comm/tx_data[2] (UART_comm)                             0.00       2.20 f
+  comm/U148/Z (AO222D1BWP)                                0.13       2.33 f
+  comm/uart0/transmitter/data_reg[2]/D (DFQD1BWP)         0.00       2.33 f
   data arrival time                                                  2.33
 
   clock clk (rise edge)                                   2.50       2.50
   clock network delay (ideal)                             0.00       2.50
   clock uncertainty                                      -0.15       2.35
-  comm/uart0/transmitter/data_reg[0]/CP (DFQD1BWP)        0.00       2.35 r
+  comm/uart0/transmitter/data_reg[2]/CP (DFQD1BWP)        0.00       2.35 r
   library setup time                                     -0.01       2.34
   data required time                                                 2.34
   --------------------------------------------------------------------------
