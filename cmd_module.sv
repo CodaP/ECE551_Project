@@ -4,6 +4,7 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
                 // Extra ports
                start_dump, dump_channel, dump_data, send_dump, dump_finished, set_capture_done, trig_cfg, decimator, trig_pos);
 	
+    // Enumerations for the types of commands available
     enum logic [7:0] {  DUMP          = 8'h01,
                         CONFIG_GAIN   = 8'h02,
                         SET_TRIGGER   = 8'h03,
@@ -14,6 +15,8 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
                         WRITE_EEPROM  = 8'h08,
                         READ_EEPROM   = 8'h09
     } Opcode; 
+
+    // Typical responses to a command
     localparam ACK = 8'hA5;
     localparam NACK = 8'hEE;
 
@@ -253,7 +256,11 @@ module cmd_module(clk, rst_n, cmd, cmd_rdy, clr_cmd_rdy, resp_data, send_resp, s
                             // Read from EEPROM cmd[13:8] (addr) cmd[7:0] (data)
                             SPI_data = {2'b00, cmd[13:8],8'hxx};
                         end
-                        default: nxt_state = DISPATCH_CMD;
+                        default: begin
+                            nxt_state = DISPATCH_CMD;
+                            resp_data = NACK;
+                            send_resp = 1;
+                        end
                     endcase
                 end
                 else
