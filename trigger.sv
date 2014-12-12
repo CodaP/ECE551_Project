@@ -81,8 +81,8 @@ module DetectStableEdge(clk, rst_n, _in, stable, delayed, posEdge, negEdge);
 
 	logic midstable;
 
-	assign posEdge = delayed && !stable;
-	assign negEdge = !delayed && stable;
+	assign posEdge = !delayed && stable;
+	assign negEdge = delayed && !stable;
 
     always_ff @(posedge clk, negedge rst_n) begin
         if (!rst_n) begin
